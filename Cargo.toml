@@ -1,0 +1,6 @@
+[package]
+name = "poloniex"
+version = "0.1.0"
+authors = ["Maksym Vorobiov <maxim.vorobjov@gmail.com>"]
+
+[dependencies]
