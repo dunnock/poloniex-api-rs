@@ -1,6 +1,9 @@
 [package]
+authors = ["Maksym Vorobiov <maxim.vorobjov@gmail.com>"]
 name = "poloniex"
 version = "0.1.0"
-authors = ["Maksym Vorobiov <maxim.vorobjov@gmail.com>"]
 
 [dependencies]
+futures = "0.1"
+tokio-core = "0.1"
+websocket = "0.20.2"
