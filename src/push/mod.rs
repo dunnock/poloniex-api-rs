@@ -1,18 +1,33 @@
 use tokio_core::reactor::Handle;
-use futures::future::Future;
-use futures::Stream;
-use futures::stream::StreamFuture;
-use websocket::{ClientBuilder};
-use websocket::client::async::{TlsStream,TcpStream};
+use futures::future::{ok, err, Future};
+use futures::Sink;
+use websocket::{ClientBuilder, Message};
+use websocket::client::async;
 
-const URL: &'static str = "wss://api.poloniex.com";
+const URL: &'static str = "wss://api2.poloniex.com:443";
 
-pub fn subscribe(pairs: &Vec<String>, handle: &Handle) -> StreamFuture<TlsStream<TcpStream>> {
-	ClientBuilder::new(URL)
+type Client = async::ClientNew<async::TlsStream<async::TcpStream>>;
+
+pub fn subscribe(pairs: Vec<String>, handle: &Handle) -> Client {
+	let client_future = ClientBuilder::new(URL)
 		.unwrap()
 		.async_connect_secure(None, handle)
-		.and_then(|(duplex, _)| {
-			let (sink, stream) = duplex.split();
-      stream.into_future()
-    })
+		.and_then(move |(mut client, hdr)| {
+			for pair in pairs.iter() {
+				let msg = message_subscribe(pair).into();
+				match client.start_send(msg) {
+					Err(status) => return err(status),
+					_ => ()
+				}; //TODO: handle AsyncSink::NotReady
+			}
+			match client.poll_complete() {
+				Err(status) => return err(status),
+				_ => return ok((client, hdr))
+			}
+    });
+		Box::new(client_future)
+}
+
+fn message_subscribe(channel: &str) -> Message {
+	Message::text(format!("{{ command: \"subscribe\", channel: {} }}", channel))
 }
