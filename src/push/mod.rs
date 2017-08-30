@@ -8,6 +8,8 @@ const URL: &'static str = "wss://api2.poloniex.com:443";
 
 type Client = async::ClientNew<async::TlsStream<async::TcpStream>>;
 
+
+// subscribe to trading pair ticker updates
 pub fn subscribe(pairs: Vec<String>, handle: &Handle) -> Client {
 	let client_future = ClientBuilder::new(URL)
 		.unwrap()
@@ -18,7 +20,7 @@ pub fn subscribe(pairs: Vec<String>, handle: &Handle) -> Client {
 				match client.start_send(msg) {
 					Err(status) => return err(status),
 					_ => ()
-				}; //TODO: handle AsyncSink::NotReady
+				};
 			}
 			match client.poll_complete() {
 				Err(status) => return err(status),
