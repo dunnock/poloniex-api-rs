@@ -13,6 +13,8 @@ RUN cargo build --release
 
 
 FROM debian:jessie
+RUN apt-get update
+RUN apt-get install libssl-dev -y
 RUN mkdir -p /rust/app
 WORKDIR /rust/app
 COPY --from=build /usr/lib/ssl/ /usr/lib/ssl/
