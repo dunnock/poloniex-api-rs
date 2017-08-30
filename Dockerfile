@@ -1,0 +1,1 @@
+FROM pitkley/rust:stable-onbuild
