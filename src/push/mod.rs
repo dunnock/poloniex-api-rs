@@ -31,5 +31,5 @@ pub fn subscribe(pairs: Vec<String>, handle: &Handle) -> Client {
 }
 
 fn message_subscribe(channel: &str) -> Message {
-	Message::text(format!("{{ command: \"subscribe\", channel: {} }}", channel))
+	Message::text(format!("{{ \"command\": \"subscribe\", \"channel\": \"{}\" }}", channel))
 }
