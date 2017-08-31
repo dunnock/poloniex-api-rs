@@ -1,7 +1,4 @@
 use super::model;
-use super::push;
-use tokio_core::reactor::Core;
-use websocket::WebSocketError::{ResponseError};
 
 #[test]
 fn model_works() {
@@ -10,21 +7,8 @@ fn model_works() {
         rate: 0.001,
         amount: 10.1
     }];
-    let b: model::Book = model::Book {
+    let _b: model::Book = model::Book {
         pairs: model::TradePairs::BtcBch,
         records
-    };
-}
-
-#[test]
-fn test_push_connect() {
-    let mut core = Core::new().unwrap();
-    let client = push::connect(&core.handle());
-    match core.run(client) {
-      Ok(client) => println!("passed"),
-      Err(error) => match error { 
-        ResponseError(err) => println!("Warning! bad response {:?}", err), 
-        _ => panic!("cannot construct socket {:?}", error) 
-      }
     };
 }

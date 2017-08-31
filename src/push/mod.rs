@@ -4,6 +4,8 @@ use futures::Sink;
 use websocket::{ClientBuilder, Message};
 use websocket::client::async;
 
+pub mod messages;
+
 const URL: &'static str = "wss://api2.poloniex.com:443";
 
 type Client = async::ClientNew<async::TlsStream<async::TcpStream>>;

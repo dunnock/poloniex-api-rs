@@ -13,9 +13,11 @@ fn main() {
   let mut core = Core::new().unwrap();
   let pairs = PAIRS.iter().map(|p| String::from(*p)).collect();
   let updates = subscribe(pairs, &core.handle());
+
   let printed_updates = updates
     .and_then(|(s, _)| 
       s.for_each(|msg| { println!("{:?}", msg); ok(()) })
     );
+
   core.run(printed_updates).unwrap();
 }

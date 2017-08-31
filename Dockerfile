@@ -1,4 +1,4 @@
-FROM pitkley/rust:stable as build
+FROM pitkley/rust:nightly as build
 
 LABEL maintainer=maxim.vorobjov@gmail.com
 
