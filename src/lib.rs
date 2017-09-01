@@ -7,7 +7,8 @@ extern crate futures;
 extern crate tokio_core;
 extern crate json;
 
-pub mod model;
+pub mod data;
+pub mod actors;
 pub mod push;
 
 #[cfg(test)]
