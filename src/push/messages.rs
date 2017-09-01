@@ -240,9 +240,11 @@ mod tests {
   use super::BookUpdate;
   use std::str::FromStr;
   use test::Bencher;
+  use serde_json;
+  use serde_json::Value;
 
   #[test]
-  fn deserialize_order_update() {
+  fn serde_deserialize_order_update() {
     let order = r#"[189,4811424,[["o",1,"0.12906425","0.02691207"],["t","714116",0,"0.12906425","0.05946471",1504163848]]]"#;
     match BookUpdate::from_str(order) {
       Err(error) => panic!("failed to process json {}", error),
@@ -251,8 +253,14 @@ mod tests {
   }
 
   #[bench]
-  fn read_order_updates(b: &mut Bencher) {
+  fn serde_read_order_updates(b: &mut Bencher) {
     let order = r#"[189,4811424,[["o",1,"0.12906425","0.02691207"],["t","714116",0,"0.12906425","0.05946471",1504163848]]]"#;
     b.iter(|| BookUpdate::from_str(&order));
+  }
+
+  #[bench]
+  fn serde_read_order_updates_json(b: &mut Bencher) {
+    let order = r#"[189,4811424,[["o",1,"0.12906425","0.02691207"],["t","714116",0,"0.12906425","0.05946471",1504163848]]]"#;
+    b.iter(|| serde_json::from_str::<Value>(order));
   }
 }
