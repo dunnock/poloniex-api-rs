@@ -5,7 +5,7 @@ extern crate test;
 extern crate websocket;
 extern crate futures;
 extern crate tokio_core;
-extern crate serde_json;
+extern crate json;
 
 pub mod model;
 pub mod push;
