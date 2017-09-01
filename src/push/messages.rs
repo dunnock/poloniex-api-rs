@@ -4,6 +4,7 @@ use std::str::FromStr;
 
 
 // ["t","714109",1,"0.12900000","1.03377186",1504163835]
+#[derive(Debug)]
 pub struct TradeRecord {
   pub id: u64,
   pub tid: String,
@@ -12,11 +13,13 @@ pub struct TradeRecord {
 }
 
 // ["o",1,"0.12774723","0.00000000"]
+#[derive(Debug)]
 pub struct BookRecord {
   pub rate: f64, 
   pub amount: f64,
 }
 
+#[derive(Debug)]
 pub enum RecordUpdate {
   SellTotal(BookRecord),
   BuyTotal(BookRecord),
@@ -26,6 +29,7 @@ pub enum RecordUpdate {
 
 // book update message 
 // ex: [189,4811375,[["o",1,"0.12774723","0.00000000"],["t","714109",1,"0.12900000","1.03377186",1504163835]]]
+#[derive(Debug)]
 pub struct BookUpdate {
   pub book_id: u64, 
   pub record_id: u64,
@@ -45,7 +49,11 @@ impl Expect<f64> for JsonValue {
   type Error = String;
   fn expect(&self, msg: &str) -> Result<f64, Self::Error> {
     let err = || format!("{}: expected float got {}", msg, self);
-    self.as_f64().ok_or_else(err)
+    if self.is_string() {
+      self.as_str().ok_or_else(err)?.parse::<f64>().map_err(|err| err.to_string())
+    } else {
+      self.as_f64().ok_or_else(err)
+    }
   }
 }
 
@@ -53,7 +61,11 @@ impl Expect<u64> for JsonValue {
   type Error = String;
   fn expect(&self, msg: &str) -> Result<u64, Self::Error> {
     let err = || format!("{}: expected float got {}", msg, self);
-    self.as_u64().ok_or_else(err)
+    if self.is_string() {
+      self.as_str().ok_or_else(err)?.parse::<u64>().map_err(|err| err.to_string())
+    } else {
+      self.as_u64().ok_or_else(err)
+    }
   }
 }
 
@@ -210,6 +222,43 @@ mod tests {
     let order = r#"[189,4811424,[["o",1,"0.12906425","0.02691207"],["t","714116",0,"0.12906425","0.05946471",1504163848]]]"#;
     match BookUpdate::from_str(order) {
       Err(error) => panic!("failed to process json {}", error),
+      _ => ()
+    }
+  }
+
+  #[test]
+  fn json_deserialize_order_update_err1() {
+    let order = r#"[189,4811424,[["o",1,"bad","0.02691207"],["t","714116",0,"0.12906425","0.05946471",1504163848]]]"#;
+    match BookUpdate::from_str(order) {
+      Ok(val) => panic!("processed wrong json {:?}", val),
+      _ => ()
+    }
+  }
+
+  #[test]
+  fn json_deserialize_order_update_err2() {
+    let order = r#"[189,4811424]"#;
+    match BookUpdate::from_str(order) {
+      Ok(val) => panic!("processed wrong json {:?}", val),
+      _ => ()
+    }
+  }
+
+  #[test]
+  fn json_deserialize_order_update_err3() {
+    let order = r#"[189,4811424,[["f",1,"0.120000","0.02691207"],["t","714116",0,"0.12906425","0.05946471",1504163848]]]"#;
+    match BookUpdate::from_str(order) {
+      Ok(val) => panic!("processed wrong json {:?}", val),
+      _ => ()
+    }
+  }
+
+
+  #[test]
+  fn json_deserialize_order_update_err4() {
+    let order = r#"[189,4811424,[["o",3,"0.120000","0.02691207"],["t","714116",0,"0.12906425","0.05946471",1504163848]]]"#;
+    match BookUpdate::from_str(order) {
+      Ok(val) => panic!("processed wrong json {:?}", val),
       _ => ()
     }
   }
