@@ -4,7 +4,7 @@ use std::str::FromStr;
 
 
 // ["t","714109",1,"0.12900000","1.03377186",1504163835]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TradeRecord {
   pub id: u64,
   pub tid: String,
@@ -13,13 +13,13 @@ pub struct TradeRecord {
 }
 
 // ["o",1,"0.12774723","0.00000000"]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BookRecord {
   pub rate: f64, 
   pub amount: f64,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum RecordUpdate {
   SellTotal(BookRecord),
   BuyTotal(BookRecord),
@@ -29,7 +29,7 @@ pub enum RecordUpdate {
 
 // book update message 
 // ex: [189,4811375,[["o",1,"0.12774723","0.00000000"],["t","714109",1,"0.12900000","1.03377186",1504163835]]]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BookUpdate {
   pub book_id: u64, 
   pub record_id: u64,
