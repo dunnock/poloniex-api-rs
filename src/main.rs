@@ -4,7 +4,7 @@ extern crate futures;
 extern crate websocket;
 
 use poloniex::push::subscribe;
-use poloniex::actors::book;
+use poloniex::actors::logger;
 use tokio_core::reactor::Core;
 use futures::future::{Future, ok};
 use futures::Stream;
@@ -17,7 +17,7 @@ fn main() {
   let pairs = PAIRS.iter().map(|p| String::from(*p)).collect();
   let updates = subscribe(pairs, &core.handle());
 
-  let (tx, th1) = book::start_updater();
+  let (tx, th1) = logger::start_logger();
 
   let printed_updates = updates
     .and_then(move |(s, _)| {

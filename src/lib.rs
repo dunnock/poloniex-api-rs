@@ -6,6 +6,7 @@ extern crate websocket;
 extern crate futures;
 extern crate tokio_core;
 extern crate json;
+extern crate time;
 
 pub mod data;
 pub mod actors;

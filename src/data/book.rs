@@ -1,3 +1,4 @@
+
 #[derive(Clone, Debug)]
 pub enum TradePairs {
   BtcEth,
@@ -13,7 +14,6 @@ pub struct Record {
 
 #[derive(Clone, Debug)]
 pub struct Book {
-  pub id: u64,
   pub pairs: TradePairs,
   pub sell: Vec<Record>,
   pub buy: Vec<Record>

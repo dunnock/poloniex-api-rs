@@ -7,7 +7,6 @@ fn model_works() {
         amount: 10.1
     }];
     let _b: book::Book = book::Book {
-        id: 169,
         pairs: book::TradePairs::BtcBch,
         sell: records.clone(),
         buy: records

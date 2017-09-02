@@ -1,7 +1,7 @@
 use json::{self, JsonValue};
 use std::convert::TryFrom;
 use std::str::FromStr;
-use super::book::Book;
+use super::book::{Book, TradePairs, Record};
 
 // ["t","714109",1,"0.12900000","1.03377186",1504163835]
 #[derive(Debug, Clone)]
@@ -130,7 +130,6 @@ impl<'a> TryFrom<&'a JsonValue> for BookRecord {
 }
 
 
-
 /**
  * RecordUpdate enum conversion traits
  * use: 
@@ -143,8 +142,8 @@ impl<'a> TryFrom<&'a JsonValue> for RecordUpdate {
   
   fn try_from(v: &'a JsonValue) -> Result<Self, Self::Error> {
     let err = |msg| Err(format!("book update record {} {:?}", msg, v));
-    if v.len() < 3 {
-      return err("has less than 3 items");
+    if v.len() < 2 {
+      return err("has less than 2 items");
     }
 
     match v[0].as_str() {
@@ -166,12 +165,72 @@ impl<'a> TryFrom<&'a JsonValue> for RecordUpdate {
           _ => err("has unknown dir")
         }
       },
+      Some("i") => {
+        let book = Book::try_from(&v[1])?;
+        Ok(RecordUpdate::Initial(book))
+      },
       _ => err("has unknown type")
     }
   }
 }
 
 
+
+/**
+ * Book conversion traits
+ * use: 
+ *  let val = match json::parse(r#"["i", {"currencyPair": "BTC_BCH", "orderBook": [{0.13161901: "0.23709568", 0.13164313: "0.17328089"}, {0.13169621: "0.2331"}]]"#) {
+ *     json::Array(vec) => vec,
+ *     _ => Err(())
+ *  };
+ *  let records:: Book = Book::try_from(&val)
+ **/
+
+impl<'a> TryFrom<&'a JsonValue> for Book {
+  type Error = String;
+  fn try_from(v: &'a JsonValue) -> Result<Self, Self::Error> {
+    if !v.is_object() {
+      return Err(format!("initial book is not object {:?}", v));
+    }
+    if v["orderBook"].len()!=2 || 
+       !v["orderBook"][0].is_object() || 
+       !v["orderBook"][1].is_object() 
+    {
+      return Err(format!("initial book orderBook bad format {:?}", v["orderBook"]));
+    }
+
+    let pairs = TradePairs::try_from(&v["currencyPair"])?;
+
+    let to_records = |obj: &JsonValue| obj.entries().map(Record::try_from).collect::<Result<_,_>>();
+    let sell: Vec<Record> = to_records(&v["orderBook"][0])?;
+    let buy: Vec<Record> = to_records(&v["orderBook"][1])?;
+
+    Ok(Self {pairs, sell, buy})
+  }
+}
+
+impl<'a> TryFrom<&'a JsonValue> for TradePairs {
+  type Error = String;
+  fn try_from(v: &'a JsonValue) -> Result<Self, Self::Error> {
+    if !v.is_string() {
+      return Err(format!("book's trade pairs is not string {:?}", v));
+    };
+    match v.as_str() {
+      Some("BTC_BCH") => Ok(TradePairs::BtcBch),
+      Some("BTC_ETH") => Ok(TradePairs::BtcEth),
+      _ => Err(format!("unknown trade pair {:?}", v))
+    }
+  }
+}
+
+impl<'a> TryFrom<(&'a str, &'a JsonValue)> for Record {
+  type Error = String;
+  fn try_from((srate, vamount): (&'a str, &'a JsonValue)) -> Result<Self, Self::Error> {
+    let rate: f64 = srate.parse::<f64>().map_err(|err| err.to_string())?;
+    let amount: f64 = vamount.expect("record amount")?;
+    Ok(Self { rate, amount })
+  }
+}
 
 /**
  * BookUpdate conversion traits
@@ -263,6 +322,16 @@ mod tests {
       _ => ()
     }
   }
+
+  #[test]
+  fn json_deserialize_order_update_initial() {
+    let order = r#"[189, 5130995, [["i", {"currencyPair": "BTC_BCH", "orderBook": [{0.13161901: "0.23709568", 0.13164313: "0.17328089"}, {0.13169621: "0.2331"}]]]]"#;
+    match BookUpdate::from_str(order) {
+      Ok(val) => panic!("processed wrong json {:?}", val),
+      _ => ()
+    }
+  }
+  
 
   #[bench]
   fn json_read_order_updates(b: &mut Bencher) {
