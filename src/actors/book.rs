@@ -2,15 +2,16 @@ use ::data::messages::{BookUpdate};
 use std::sync::mpsc::{self, Sender};
 use std::thread::{self, JoinHandle};
 use std::str::FromStr;
+use bus::BusReader;
+use std::sync::mpsc::RecvError;
 
-
-pub fn start_updater() -> (Sender<String>, JoinHandle<bool>) {
-  let (tx, rx) = mpsc::channel();
-  let th1 = thread::spawn(move || 
+// TODO: maybe pass reference, not String?
+// TODO: convert to struct with trait
+pub fn start(mut channel: BusReader<String>) -> JoinHandle<Result<(),RecvError>> {
+  thread::spawn(move || 
     loop {
-      let msg: String = rx.recv().unwrap();
+      let msg: String = channel.recv()?;
       println!("{:?}", BookUpdate::from_str(&msg));
     }
-  );
-  (tx, th1)
+  )
 }
