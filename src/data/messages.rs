@@ -2,6 +2,7 @@ use json::{self, JsonValue};
 use std::convert::TryFrom;
 use std::str::FromStr;
 use super::book::{Book, TradePairs, Record};
+use ::PoloError;
 
 // ["t","714109",1,"0.12900000","1.03377186",1504163835]
 #[derive(Debug, Clone)]
@@ -47,11 +48,11 @@ trait Expect<T> {
 }
 
 impl Expect<f64> for JsonValue {
-  type Error = String;
+  type Error = PoloError;
   fn expect(&self, msg: &str) -> Result<f64, Self::Error> {
-    let err = || format!("{}: expected float got {}", msg, self);
+    let err = || PoloError::wrong_data(format!("{}: expected float got {}", msg, self));
     if self.is_string() {
-      self.as_str().ok_or_else(err)?.parse::<f64>().map_err(|err| err.to_string())
+      self.as_str().ok_or_else(err)?.parse::<f64>().map_err(PoloError::from)
     } else {
       self.as_f64().ok_or_else(err)
     }
@@ -59,11 +60,11 @@ impl Expect<f64> for JsonValue {
 }
 
 impl Expect<u64> for JsonValue {
-  type Error = String;
+  type Error = PoloError;
   fn expect(&self, msg: &str) -> Result<u64, Self::Error> {
-    let err = || format!("{}: expected float got {}", msg, self);
+    let err = || PoloError::wrong_data(format!("{}: expected float got {}", msg, self));
     if self.is_string() {
-      self.as_str().ok_or_else(err)?.parse::<u64>().map_err(|err| err.to_string())
+      self.as_str().ok_or_else(err)?.parse::<u64>().map_err(PoloError::from)
     } else {
       self.as_u64().ok_or_else(err)
     }
@@ -71,10 +72,11 @@ impl Expect<u64> for JsonValue {
 }
 
 impl Expect<String> for JsonValue {
-  type Error = String;
+  type Error = PoloError;
   fn expect(&self, msg: &str) -> Result<String, Self::Error> {
-    let err = || format!("{}: expected string got {}", msg, self);
-    Ok(String::from(self.as_str().ok_or_else(err)?))
+    let err = || PoloError::wrong_data(format!("{}: expected string got {}", msg, self));
+    let s = self.as_str().ok_or_else(err)?;
+    Ok(String::from(s))
   }
 }
 
@@ -89,10 +91,10 @@ impl Expect<String> for JsonValue {
  **/
 
 impl<'a> TryFrom<&'a JsonValue> for TradeRecord {
-  type Error = String;
+  type Error = PoloError;
   fn try_from(v: &'a JsonValue) -> Result<Self, Self::Error> {
     if v.len() != 6 {
-      return Err(format!("trade record does not have 6 items {:?}", v));
+      return Err(PoloError::wrong_data(format!("trade record does not have 6 items {:?}", v)));
     }
 
     let id: u64 = v[5].expect("trade record id")?;
@@ -108,7 +110,7 @@ impl<'a> TryFrom<&'a JsonValue> for TradeRecord {
 /**
  * BookRecord conversion traits
  * use: 
- *  let val = match serde_json::from_str(r#"["o",0,"0.12900000","1.03377186"]"#) {
+ *  let val = match json::parse(r#"["o",0,"0.12900000","1.03377186"]"#) {
  *     serde_json::Array(vec) => vec,
  *     _ => Err(())
  *  };
@@ -116,10 +118,10 @@ impl<'a> TryFrom<&'a JsonValue> for TradeRecord {
  **/
 
 impl<'a> TryFrom<&'a JsonValue> for BookRecord {
-  type Error = String;
+  type Error = PoloError;
   fn try_from(v: &'a JsonValue) -> Result<Self, Self::Error> {
     if v.len() != 4 {
-      return Err(format!("book record does not have 4 items {:?}", v));
+      return Err(PoloError::wrong_data(format!("book record does not have 4 items {:?}", v)));
     }
 
     let rate: f64 = v[2].expect("book record rate")?;
@@ -133,15 +135,15 @@ impl<'a> TryFrom<&'a JsonValue> for BookRecord {
 /**
  * RecordUpdate enum conversion traits
  * use: 
- *  let val = match serde_json::from_str(r#"["o",0,"0.12900000","1.03377186"]"#);
+ *  let val = match json::parse(r#"["o",0,"0.12900000","1.03377186"]"#);
  *  let records:: RecordUpdate = RecordUpdate::try_from(&val)
  **/
 
 impl<'a> TryFrom<&'a JsonValue> for RecordUpdate {
-  type Error = String;
+  type Error = PoloError;
   
   fn try_from(v: &'a JsonValue) -> Result<Self, Self::Error> {
-    let err = |msg| Err(format!("book update record {} {:?}", msg, v));
+    let err = |msg| Err(PoloError::wrong_data(format!("book update record {} {:?}", msg, v)));
     if v.len() < 2 {
       return err("has less than 2 items");
     }
@@ -187,16 +189,18 @@ impl<'a> TryFrom<&'a JsonValue> for RecordUpdate {
  **/
 
 impl<'a> TryFrom<&'a JsonValue> for Book {
-  type Error = String;
+  type Error = PoloError;
   fn try_from(v: &'a JsonValue) -> Result<Self, Self::Error> {
+    let err = |msg| Err(PoloError::wrong_data(format!("{} {:?}", msg, v)));
+
     if !v.is_object() {
-      return Err(format!("initial book is not object {:?}", v));
+      return err("initial book is not object");
     }
     if v["orderBook"].len()!=2 || 
        !v["orderBook"][0].is_object() || 
        !v["orderBook"][1].is_object() 
     {
-      return Err(format!("initial book orderBook bad format {:?}", v["orderBook"]));
+      return err("initial book orderBook bad format");
     }
 
     let pairs = TradePairs::try_from(&v["currencyPair"])?;
@@ -210,23 +214,25 @@ impl<'a> TryFrom<&'a JsonValue> for Book {
 }
 
 impl<'a> TryFrom<&'a JsonValue> for TradePairs {
-  type Error = String;
+  type Error = PoloError;
   fn try_from(v: &'a JsonValue) -> Result<Self, Self::Error> {
+    let err = |msg| Err(PoloError::wrong_data(format!("{} {:?}", msg, v)));
+
     if !v.is_string() {
-      return Err(format!("book's trade pairs is not string {:?}", v));
+      return err("book's trade pairs is not string");
     };
     match v.as_str() {
       Some("BTC_BCH") => Ok(TradePairs::BtcBch),
       Some("BTC_ETH") => Ok(TradePairs::BtcEth),
-      _ => Err(format!("unknown trade pair {:?}", v))
+      _ => err("unknown trade pair")
     }
   }
 }
 
 impl<'a> TryFrom<(&'a str, &'a JsonValue)> for Record {
-  type Error = String;
+  type Error = PoloError;
   fn try_from((srate, vamount): (&'a str, &'a JsonValue)) -> Result<Self, Self::Error> {
-    let rate: f64 = srate.parse::<f64>().map_err(|err| err.to_string())?;
+    let rate: f64 = srate.parse::<f64>()?;
     let amount: f64 = vamount.expect("record amount")?;
     Ok(Self { rate, amount })
   }
@@ -241,21 +247,23 @@ impl<'a> TryFrom<(&'a str, &'a JsonValue)> for Record {
  **/
 
 impl FromStr for BookUpdate {
-  type Err = String;
+  type Err = PoloError;
   fn from_str(order: &str) -> Result<Self, Self::Err> {
-    let v = json::parse(order).map_err(|err| err.to_string())?;
-    Ok(BookUpdate::try_from(v)?)
+    let v = json::parse(order)?;
+    BookUpdate::try_from(v)
   }
 }
 
 impl TryFrom<JsonValue> for BookUpdate {
-  type Error = String;
+  type Error = PoloError;
   fn try_from(v: JsonValue) -> Result<Self, Self::Error> {
+    let err = |msg| Err(PoloError::wrong_data(format!("{} {:?}", msg, v)));
+
     if v.len() != 3 {
-      return Err(format!("book update is not triple {:?}", v));
+      return err("book update is not triple");
     }
     if !v[2].is_array() {
-      return Err(format!("book update records: expected array got {:?}", v));
+      return err("book update records: expected array got");
     }
 
     let book_id: u64 = v[0].expect("book update book_id")?;
@@ -325,13 +333,12 @@ mod tests {
 
   #[test]
   fn json_deserialize_order_update_initial() {
-    let order = r#"[189, 5130995, [["i", {"currencyPair": "BTC_BCH", "orderBook": [{0.13161901: "0.23709568", 0.13164313: "0.17328089"}, {0.13169621: "0.2331"}]]]]"#;
+    let order = r#"[189, 5130995, [["i", {"currencyPair": "BTC_BCH", "orderBook": [{"0.13161901": 0.23709568, "0.13164313": "0.17328089"}, {"0.13169621": 0.2331}]}]]]"#;
     match BookUpdate::from_str(order) {
-      Ok(val) => panic!("processed wrong json {:?}", val),
+      Err(error) => panic!("failed to process json {:?}", error),
       _ => ()
     }
   }
-  
 
   #[bench]
   fn json_read_order_updates(b: &mut Bencher) {
