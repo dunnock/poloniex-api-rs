@@ -5,6 +5,9 @@ use bus::BusReader;
 use std::thread::{self, JoinHandle};
 use ::error::PoloError;
 
+pub type Accountant = book::Accountant;
+pub type Logger = logger::Logger;
+
 pub type ActorResult = Result<u32,PoloError>;
 
 pub trait Actor: Send + Clone + 'static {
