@@ -3,7 +3,7 @@ use ::data::messages::{BookUpdate, RecordUpdate};
 use std::str::FromStr;
 use super::Actor;
 use std::sync::{Arc, Mutex};
-use ::PoloError;
+use ::error::PoloError;
 
 #[derive(Clone)]
 pub struct Accountant {

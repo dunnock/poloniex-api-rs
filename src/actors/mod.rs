@@ -3,7 +3,7 @@ pub mod logger;
 
 use bus::BusReader;
 use std::thread::{self, JoinHandle};
-use ::PoloError;
+use ::error::PoloError;
 
 pub type ActorResult = Result<u32,PoloError>;
 

@@ -13,6 +13,7 @@ extern crate crossbeam;
 pub mod data;
 pub mod actors;
 pub mod push;
+pub mod error;
 
 #[cfg(test)]
 mod tests;

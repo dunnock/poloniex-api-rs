@@ -2,7 +2,7 @@ use json::{self, JsonValue};
 use std::convert::TryFrom;
 use std::str::FromStr;
 use super::book::{Book, TradePairs, Record};
-use ::PoloError;
+use ::error::PoloError;
 
 // ["t","714109",1,"0.12900000","1.03377186",1504163835]
 #[derive(Debug, Clone)]
