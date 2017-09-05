@@ -7,7 +7,7 @@ fn model_works() {
     let mut rec_hash = HashMap::new();
     rec_hash.insert(String::from("0.001"), 10.1);
     let _b: book::Book = book::Book {
-        pairs: book::TradePairs::BtcBch,
+        pair: book::TradePairs::BtcBch,
         sell: rec_hash.clone(),
         buy: rec_hash
     };

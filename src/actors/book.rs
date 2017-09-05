@@ -1,5 +1,5 @@
 use ::data::book::TradeBook;
-use ::data::messages::{BookUpdate, RecordUpdate};
+use ::data::messages::{BookUpdate, RecordUpdate, BookRecord};
 use std::str::FromStr;
 use super::Actor;
 use std::sync::{Arc, Mutex};
@@ -20,16 +20,28 @@ impl Accountant {
 
 impl Actor for Accountant {
   fn process_message(&mut self, msg: String) -> Result<(),PoloError> {
-    // TODO: maybe send reference, not String?
+    let err = |title| PoloError::wrong_data(format!("{} {:?}", title, msg));
+
     let update = BookUpdate::from_str(&msg)?;
     for rec in update.records {
       match rec {
         RecordUpdate::Initial(book) => {
-          let pairs = book.pairs.clone();
           let mut tb = self.tb.lock().unwrap();
-          tb[&pairs] = book;
+          tb.add_book(book, update.book_id);
         },
-        _ => println!("got book modify record")
+        RecordUpdate::SellTotal(BookRecord {rate, amount}) => {
+          let mut tb = self.tb.lock().unwrap();
+          let book = tb.get_book_by_id(&update.book_id)
+            .ok_or_else(|| err("book not initialized"))?;
+          book.update_sell(rate, amount);
+        },
+        RecordUpdate::BuyTotal(BookRecord {rate, amount}) => {
+          let mut tb = self.tb.lock().unwrap();
+          let book = tb.get_book_by_id(&update.book_id)
+            .ok_or_else(|| err("book not initialized"))?;
+          book.update_buy(rate, amount);
+        },
+        _ => println!("trade order")
       }
     };
     Ok(())
@@ -46,6 +58,7 @@ mod tests {
   use ::data::messages::{BookUpdate, RecordUpdate};
   use std::str::FromStr;
   use std::sync::{Arc, Mutex};
+  use std::thread;
 
 
   #[test]
@@ -56,14 +69,14 @@ mod tests {
 
     let mut bus = Bus::new(1);
     let ch1 = bus.add_rx();
-    let th = actor.subscribe(ch1);
+    let th = thread::spawn(move || actor.listen(ch1));
     bus.broadcast(Some(order.clone()));
     bus.broadcast(None);
     println!("{:?}", th.join());
 
     let data = tb.lock().unwrap();
     match BookUpdate::from_str(&order).unwrap().records[0] {
-      RecordUpdate::Initial(ref book) => assert_eq!(*book, data.btcbch),
+      RecordUpdate::Initial(ref book) => assert_eq!(*book, data.books[0]),
       _ => panic!("BookUpdate::from_str were not able to parse RecordUpdate::Initial")
     }
   }

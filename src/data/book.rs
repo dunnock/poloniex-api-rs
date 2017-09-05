@@ -1,11 +1,15 @@
-use std::ops::{Index, IndexMut};
 use ::error::PoloError;
 use std::collections::HashMap;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum TradePairs {
   BtcEth,
   BtcBch,
+}
+
+pub enum TradeOp {
+  Sell,
+  Buy,
 }
 
 /**
@@ -14,78 +18,81 @@ pub enum TradePairs {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Record {
   pub rate: String, 
-  pub amount: f64,
-  _rate_f: f64, 
+  pub amount: f32,
+  _rate_f: f32, 
 }
 
 impl Record {
-  pub fn new(rate: String, amount: f64) -> Record {
+  pub fn new(rate: String, amount: f32) -> Record {
     Record { rate, amount, _rate_f: 0.0 }
   }
 
-  pub fn rate_f64(&mut self) -> Result<f64, PoloError> {
+  pub fn rate_f32(&mut self) -> Result<f32, PoloError> {
     if self._rate_f == 0.0 {
-      self._rate_f = self.rate.parse::<f64>()?;
+      self._rate_f = self.rate.parse::<f32>()?;
     };
     Ok(self._rate_f)
   }
 }
 
-type Records = HashMap<String,f64>;
+type Records = HashMap<String,f32>;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Book {
-  pub pairs: TradePairs,
+  pub pair: TradePairs,
   pub sell: Records,
   pub buy: Records
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct TradeBook {
-  pub btcbch: Book,
-  pub btceth: Book
+  pub books: Vec<Book>,
+  pub by_id: HashMap<u16, usize>,
+  pub by_pair: HashMap<TradePairs, usize>,
 }
 
-// Book constructor
+// Book operations
 impl Book {
-  pub fn new(pairs: TradePairs) -> Book {
+  pub fn new(pair: TradePairs) -> Book {
     Book {
-      pairs,
+      pair,
       sell: HashMap::new(),
       buy: HashMap::new()
     }
   }
+
+  pub fn update_sell(&mut self, rate: String, amount: f32) -> Option<f32> {
+    self.sell.insert(rate, amount)
+  }
+
+  pub fn update_buy(&mut self, rate: String, amount: f32) -> Option<f32> {
+    self.buy.insert(rate, amount)
+  }
 }
 
-// TradeBook constructor
+// TradeBook operations
 impl TradeBook {
   pub fn new() -> TradeBook {
     TradeBook {
-      btcbch: Book::new(TradePairs::BtcBch),
-      btceth: Book::new(TradePairs::BtcEth),
+      books: Vec::new(),
+      by_id: HashMap::new(),
+      by_pair: HashMap::new()
     }
   }
-}
 
-// TradeBook items accessible by TradePairs enum:
-// let tb = TradeBook::new();
-// tb[TradePairs::BtcBch]
-impl<'a> Index<&'a TradePairs> for TradeBook {
-  type Output = Book;
-
-  fn index(&self, pairs: &'a TradePairs) -> &Book {
-    match *pairs {
-      TradePairs::BtcBch => &self.btcbch,
-      TradePairs::BtcEth => &self.btceth,
-    }
+  pub fn add_book(&mut self, book: Book, id: u16) {
+    let pair = book.pair.clone();
+    self.books.push(book);
+    let idx = self.books.len()-1;
+    self.by_id.insert(id, idx);
+    self.by_pair.insert(pair, idx);
   }
-}
 
-impl<'a> IndexMut<&'a TradePairs> for TradeBook {
-  fn index_mut(&mut self, pairs: &'a TradePairs) -> &mut Book {
-    match *pairs {
-      TradePairs::BtcBch => &mut self.btcbch,
-      TradePairs::BtcEth => &mut self.btceth,
+  pub fn get_book_by_id(&mut self, id: &u16) -> Option<&mut Book> {
+    if let Some(idx) = self.by_id.get(id) {
+      Some(&mut self.books[*idx])
+    } else {
+      None
     }
   }
 }

@@ -2,7 +2,6 @@ pub mod book;
 pub mod logger;
 
 use bus::BusReader;
-use std::thread::{self, JoinHandle};
 use ::error::PoloError;
 
 pub type Accountant = book::Accountant;
@@ -10,7 +9,7 @@ pub type Logger = logger::Logger;
 
 pub type ActorResult = Result<u32,PoloError>;
 
-pub trait Actor: Send + Clone + 'static {
+pub trait Actor: Send + Clone {
   fn process_message(&mut self, msg: String) -> Result<(),PoloError>;
 
   fn listen(&mut self, mut channel: BusReader<Option<String>>) -> ActorResult {
@@ -26,10 +25,5 @@ pub trait Actor: Send + Clone + 'static {
       }
     };
     Ok(counter)
-  }
-
-  fn subscribe(&mut self, channel: BusReader<Option<String>>) -> JoinHandle<ActorResult> {
-    let mut actor = self.clone();
-    thread::spawn(move || actor.listen(channel))
   }
 }

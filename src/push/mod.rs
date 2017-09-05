@@ -4,14 +4,11 @@ use futures::Sink;
 use websocket::{ClientBuilder, Message};
 use websocket::client::async;
 
-const URL: &'static str = "wss://api2.poloniex.com:443";
-
 type Client = async::ClientNew<async::TlsStream<async::TcpStream>>;
 
-
 // subscribe to trading pair ticker updates
-pub fn subscribe(pairs: Vec<String>, handle: &Handle) -> Client {
-	let client_future = ClientBuilder::new(URL)
+pub fn subscribe(url: &str, pairs: Vec<String>, handle: &Handle) -> Client {
+	let client_future = ClientBuilder::new(url)
 		.unwrap()
 		.async_connect_secure(None, handle)
 		.and_then(move |(mut client, hdr)| {

@@ -3,7 +3,8 @@ use std::convert::TryFrom;
 use std::str::FromStr;
 use super::book::{Book, TradePairs, Record};
 use ::error::PoloError;
-use std::collections::HashMap;
+use super::json::Expect;
+
 
 // ["t","714109",1,"0.12900000","1.03377186",1504163835]
 #[derive(Debug, Clone)]
@@ -11,14 +12,14 @@ pub struct TradeRecord {
   pub id: u64,
   pub tid: String,
   pub rate: String, 
-  pub amount: f64,
+  pub amount: f32,
 }
 
 // ["o",1,"0.12774723","0.00000000"]
 #[derive(Debug, Clone)]
 pub struct BookRecord {
   pub rate: String, 
-  pub amount: f64,
+  pub amount: f32,
 }
 
 #[derive(Debug, Clone)]
@@ -34,66 +35,9 @@ pub enum RecordUpdate {
 // ex: [189,4811375,[["o",1,"0.12774723","0.00000000"],["t","714109",1,"0.12900000","1.03377186",1504163835]]]
 #[derive(Debug, Clone)]
 pub struct BookUpdate {
-  pub book_id: u64, 
+  pub book_id: u16, 
   pub record_id: u64,
   pub records: Vec<RecordUpdate>
-}
-
-
-/**
- * internal trait for serde_json::Value evaluation and conversion
-**/
-trait Expect<T> {
-  type Error;
-  fn expect(&self, msg: &str) -> Result<T, Self::Error>;
-}
-
-impl Expect<f64> for JsonValue {
-  type Error = PoloError;
-  fn expect(&self, msg: &str) -> Result<f64, Self::Error> {
-    let err = || PoloError::wrong_data(format!("{}: expected float got {}", msg, self));
-    if self.is_string() {
-      self.as_str().ok_or_else(err)?.parse::<f64>().map_err(PoloError::from)
-    } else {
-      self.as_f64().ok_or_else(err)
-    }
-  }
-}
-
-impl Expect<u64> for JsonValue {
-  type Error = PoloError;
-  fn expect(&self, msg: &str) -> Result<u64, Self::Error> {
-    let err = || PoloError::wrong_data(format!("{}: expected float got {}", msg, self));
-    if self.is_string() {
-      self.as_str().ok_or_else(err)?.parse::<u64>().map_err(PoloError::from)
-    } else {
-      self.as_u64().ok_or_else(err)
-    }
-  }
-}
-
-impl Expect<String> for JsonValue {
-  type Error = PoloError;
-  fn expect(&self, msg: &str) -> Result<String, Self::Error> {
-    let err = || PoloError::wrong_data(format!("{}: expected string got {}", msg, self));
-    let s = self.as_str().ok_or_else(err)?;
-    Ok(String::from(s))
-  }
-}
-
-impl Expect<HashMap<String, f64>> for JsonValue {
-  type Error = PoloError;
-  fn expect(&self, msg: &str) -> Result<HashMap<String, f64>, Self::Error> {
-    if !self.is_object() {
-      return Err(PoloError::wrong_data(format!("{}: expected object", msg)));
-    }
-    let mut hash = HashMap::new();
-    for (rate, amount) in self.entries() {
-      let amount: f64 = amount.expect("expected float amount")?;
-      hash.insert(rate.to_owned(), amount);
-    }; 
-    Ok(hash)
-  }
 }
 
 
@@ -117,7 +61,7 @@ impl<'a> TryFrom<&'a JsonValue> for TradeRecord {
     let id: u64 = v[5].expect("trade record id")?;
     let tid: String = v[1].expect("trade record tid")?;
     let rate: String = v[3].expect("trade record rate")?;
-    let amount: f64 = v[4].expect("trade record amount")?;
+    let amount: f32 = v[4].expect("trade record amount")?;
 
     Ok(Self {id, tid, rate, amount})
   }
@@ -142,7 +86,7 @@ impl<'a> TryFrom<&'a JsonValue> for BookRecord {
     }
 
     let rate: String = v[2].expect("book record rate")?;
-    let amount: f64 = v[3].expect("book record amount")?;
+    let amount: f32 = v[3].expect("book record amount")?;
 
     Ok(Self {rate, amount})
   }
@@ -218,9 +162,9 @@ impl<'a> TryFrom<&'a JsonValue> for Book {
     }
 
     Ok(Self {
-      pairs: TradePairs::try_from(&v["currencyPair"])?, 
-      sell: v["orderBook"][0].expect("initial book orderBook")?, 
-      buy: v["orderBook"][1].expect("initial book orderBook")?
+      pair: TradePairs::try_from(&v["currencyPair"])?, 
+      sell: v["orderBook"][0].expect("initial book orderBook[0]")?, 
+      buy: v["orderBook"][1].expect("initial book orderBook[1]")?
     })
   }
 }
@@ -245,7 +189,7 @@ impl<'a> TryFrom<(&'a str, &'a JsonValue)> for Record {
   type Error = PoloError;
   fn try_from((srate, vamount): (&'a str, &'a JsonValue)) -> Result<Self, Self::Error> {
     let rate: String = srate.to_owned();
-    let amount: f64 = vamount.expect("record amount")?;
+    let amount: f32 = vamount.expect("record amount")?;
     Ok(Self::new(rate, amount))
   }
 }
@@ -280,14 +224,16 @@ impl TryFrom<JsonValue> for BookUpdate {
       return err("book update records: expected array got");
     }
 
-    let book_id: u64 = v[0].expect("book update book_id")?;
-    let record_id: u64 = v[1].expect("book update record_id")?;
     let mut records: Vec<RecordUpdate> = vec![];
     for record in v[2].members() {
       records.push(RecordUpdate::try_from(record)?)
     };
 
-    Ok(Self { book_id, record_id, records })
+    Ok(Self { 
+      book_id: v[0].expect("book update book_id")?, 
+      record_id: v[1].expect("book update record_id")?, 
+      records 
+    })
   }
 }
 
@@ -361,6 +307,12 @@ mod tests {
   #[bench]
   fn json_read_order_updates(b: &mut Bencher) {
     let order = r#"[189,4811424,[["o",1,"0.12906425","0.02691207"],["t","714116",0,"0.12906425","0.05946471",1504163848]]]"#;
+    b.iter(|| BookUpdate::from_str(&order));
+  }
+
+  #[bench]
+  fn json_read_init_update(b: &mut Bencher) {
+    let order = r#"[189, 5130995, [["i", {"currencyPair": "BTC_BCH", "orderBook": [{"0.13161901": 0.23709568, "0.13164313": "0.17328089"}, {"0.13169621": 0.2331}]}]]]"#;
     b.iter(|| BookUpdate::from_str(&order));
   }
 
