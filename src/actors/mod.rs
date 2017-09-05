@@ -19,7 +19,8 @@ pub trait Actor: Send + Clone {
       let msg = channel.recv().unwrap();
       counter = counter + 1;
       if let Some(text) = msg {
-        self.process_message(text).unwrap();
+        self.process_message(text)
+          .unwrap_or_else(|err| println!("Error processing message {:?}", err));
       } else {
         break;
       }
