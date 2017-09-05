@@ -1,5 +1,5 @@
-use ::data::book::TradeBook;
 use ::data::messages::{BookUpdate, RecordUpdate, BookRecord};
+use ::data::trade::TradeBook;
 use std::str::FromStr;
 use super::Actor;
 use std::sync::{Arc, Mutex};
@@ -31,13 +31,13 @@ impl Actor for Accountant {
         },
         RecordUpdate::SellTotal(BookRecord {rate, amount}) => {
           let mut tb = self.tb.lock().unwrap();
-          let book = tb.get_book_by_id(&update.book_id)
+          let book = tb.book_by_id(&update.book_id)
             .ok_or_else(|| err("book not initialized"))?;
           book.update_sell(rate, amount);
         },
         RecordUpdate::BuyTotal(BookRecord {rate, amount}) => {
           let mut tb = self.tb.lock().unwrap();
-          let book = tb.get_book_by_id(&update.book_id)
+          let book = tb.book_by_id(&update.book_id)
             .ok_or_else(|| err("book not initialized"))?;
           book.update_buy(rate, amount);
         },
@@ -54,7 +54,7 @@ mod tests {
   use super::Accountant;
   use bus::Bus;
   use ::actors::Actor;
-  use ::data::book::TradeBook;
+  use ::data::trade::TradeBook;
   use ::data::messages::{BookUpdate, RecordUpdate};
   use std::str::FromStr;
   use std::sync::{Arc, Mutex};
@@ -74,9 +74,10 @@ mod tests {
     bus.broadcast(None);
     println!("{:?}", th.join());
 
-    let data = tb.lock().unwrap();
+    let mut tb_mut = tb.lock().unwrap();
+    let actor_book = tb_mut.book_by_id(&189).unwrap().book_ref();
     match BookUpdate::from_str(&order).unwrap().records[0] {
-      RecordUpdate::Initial(ref book) => assert_eq!(*book, data.books[0]),
+      RecordUpdate::Initial(ref book) => assert_eq!(*book, *actor_book),
       _ => panic!("BookUpdate::from_str were not able to parse RecordUpdate::Initial")
     }
   }

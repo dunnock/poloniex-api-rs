@@ -1,15 +1,11 @@
 use ::error::PoloError;
 use std::collections::HashMap;
+use std::fmt::Debug;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum TradePairs {
   BtcEth,
   BtcBch,
-}
-
-pub enum TradeOp {
-  Sell,
-  Buy,
 }
 
 /**
@@ -44,14 +40,14 @@ pub struct Book {
   pub buy: Records
 }
 
-#[derive(Debug, PartialEq)]
-pub struct TradeBook {
-  pub books: Vec<Book>,
-  pub by_id: HashMap<u16, usize>,
-  pub by_pair: HashMap<TradePairs, usize>,
+pub trait BookAccounting: Debug {
+  fn update_sell(&mut self, rate: String, amount: f32) -> Option<f32>;
+  fn update_buy(&mut self, rate: String, amount: f32) -> Option<f32>;
+  fn book_ref(&self) -> &Book;
 }
 
 // Book operations
+
 impl Book {
   pub fn new(pair: TradePairs) -> Book {
     Book {
@@ -60,39 +56,16 @@ impl Book {
       buy: HashMap::new()
     }
   }
-
-  pub fn update_sell(&mut self, rate: String, amount: f32) -> Option<f32> {
-    self.sell.insert(rate, amount)
-  }
-
-  pub fn update_buy(&mut self, rate: String, amount: f32) -> Option<f32> {
-    self.buy.insert(rate, amount)
-  }
 }
 
-// TradeBook operations
-impl TradeBook {
-  pub fn new() -> TradeBook {
-    TradeBook {
-      books: Vec::new(),
-      by_id: HashMap::new(),
-      by_pair: HashMap::new()
-    }
+impl BookAccounting for Book {
+  fn update_sell(&mut self, rate: String, amount: f32) -> Option<f32> {
+    self.sell.insert(rate, amount)
   }
-
-  pub fn add_book(&mut self, book: Book, id: u16) {
-    let pair = book.pair.clone();
-    self.books.push(book);
-    let idx = self.books.len()-1;
-    self.by_id.insert(id, idx);
-    self.by_pair.insert(pair, idx);
+  fn update_buy(&mut self, rate: String, amount: f32) -> Option<f32> {
+    self.buy.insert(rate, amount)
   }
-
-  pub fn get_book_by_id(&mut self, id: &u16) -> Option<&mut Book> {
-    if let Some(idx) = self.by_id.get(id) {
-      Some(&mut self.books[*idx])
-    } else {
-      None
-    }
+  fn book_ref(&self) -> &Book {
+    &self
   }
 }
