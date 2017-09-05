@@ -1,4 +1,3 @@
-use ::error::PoloError;
 use std::collections::HashMap;
 use std::fmt::Debug;
 
@@ -6,29 +5,6 @@ use std::fmt::Debug;
 pub enum TradePairs {
   BtcEth,
   BtcBch,
-}
-
-/**
- * Record struct
- **/
-#[derive(Clone, Debug, PartialEq)]
-pub struct Record {
-  pub rate: String, 
-  pub amount: f32,
-  _rate_f: f32, 
-}
-
-impl Record {
-  pub fn new(rate: String, amount: f32) -> Record {
-    Record { rate, amount, _rate_f: 0.0 }
-  }
-
-  pub fn rate_f32(&mut self) -> Result<f32, PoloError> {
-    if self._rate_f == 0.0 {
-      self._rate_f = self.rate.parse::<f32>()?;
-    };
-    Ok(self._rate_f)
-  }
 }
 
 type Records = HashMap<String,f32>;

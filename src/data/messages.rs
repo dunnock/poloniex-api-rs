@@ -1,7 +1,7 @@
 use json::{self, JsonValue};
 use std::convert::TryFrom;
 use std::str::FromStr;
-use super::book::{Book, TradePairs, Record};
+use super::book::{Book, TradePairs};
 use ::error::PoloError;
 use super::json::Expect;
 
@@ -185,6 +185,7 @@ impl<'a> TryFrom<&'a JsonValue> for TradePairs {
   }
 }
 
+/*
 impl<'a> TryFrom<(&'a str, &'a JsonValue)> for Record {
   type Error = PoloError;
   fn try_from((srate, vamount): (&'a str, &'a JsonValue)) -> Result<Self, Self::Error> {
@@ -192,7 +193,7 @@ impl<'a> TryFrom<(&'a str, &'a JsonValue)> for Record {
     let amount: f32 = vamount.expect("record amount")?;
     Ok(Self::new(rate, amount))
   }
-}
+}*/
 
 
 
