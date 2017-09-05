@@ -5,16 +5,16 @@ use std::cmp::Ordering;
  
 #[derive(Clone, Debug, PartialEq)]
 pub struct Record {
-  pub rate: f32, 
-  pub amount: f32
+  pub rate: f64, 
+  pub amount: f64
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct BookStats {
-  pub min_sell: f32,
-  pub max_buy: f32,
-  pub sum_sell: f32,
-  pub sum_buy: f32,
+  pub min_sell: f64,
+  pub max_buy: f64,
+  pub sum_sell: f64,
+  pub sum_buy: f64,
   pub vec_buy: Vec<Record>,
   pub vec_sell: Vec<Record>,
 }
@@ -25,25 +25,14 @@ pub struct BookWithStats {
   pub stats: BookStats
 }
 
+
 // BookStats operations
 impl BookStats {
   pub fn new(book: &Book) -> BookStats {
-    let hash_to_vec = |hash: &HashMap<String, f32>| -> (f32, Vec<Record>) {
-      let mut sum = 0.0;
-      let vec = hash.iter().filter_map(|(rate_s, amount)| {
-        rate_s.parse::<f32>()
-          .and_then(|rate| { 
-            sum += *amount; 
-            Ok(Record { rate, amount: *amount }) 
-          }).ok()
-      }).collect();
-      (sum, vec)
-    };
-
     let (sum_buy, mut vec_buy) = hash_to_vec(&book.buy);
-    vec_buy.sort_unstable_by(|rec1, rec2| rec2.rate.partial_cmp(&rec1.rate).unwrap_or(Ordering::Equal));
+    vec_buy.sort_unstable_by(|rec1, rec2| f64cmp(&rec2.rate, &rec1.rate));
     let (sum_sell, mut vec_sell) = hash_to_vec(&book.sell);
-    vec_sell.sort_unstable_by(|rec1, rec2| rec1.rate.partial_cmp(&rec2.rate).unwrap_or(Ordering::Equal));
+    vec_sell.sort_unstable_by(|rec1, rec2| f64cmp(&rec1.rate, &rec2.rate));
 
     BookStats {
       min_sell: vec_sell.first().map_or(0.0, |rec| rec.rate),
@@ -55,17 +44,17 @@ impl BookStats {
     }
   }
 
-  pub fn update_sell(&mut self, rate: f32, amount: f32, prev_amount: Option<f32>) {
-    if amount > 0.0 && (self.min_sell > rate || self.min_sell == 0.0) {
-      self.min_sell = rate
-    };
+  pub fn update_sell(&mut self, rate: f64, amount: f64, prev_amount: Option<f64>) {
+    let idx_r = self.vec_sell.binary_search_by(|rec| f64cmp(&rec.rate, &rate));
+    let stat_cmp = self.min_sell > rate;
+    update_sorted_vec(idx_r, &mut self.vec_sell, &mut self.min_sell, rate, amount, stat_cmp);
     self.sum_sell = self.sum_sell + amount - prev_amount.unwrap_or(0.0);
   }
 
-  pub fn update_buy(&mut self, rate: f32, amount: f32, prev_amount: Option<f32>) {
-    if amount > 0.0 && self.max_buy < rate {
-      self.max_buy = rate
-    };
+  pub fn update_buy(&mut self, rate: f64, amount: f64, prev_amount: Option<f64>) {
+    let idx_r = self.vec_buy.binary_search_by(|rec| f64cmp(&rate, &rec.rate));
+    let stat_cmp = self.max_buy < rate;
+    update_sorted_vec(idx_r, &mut self.vec_buy, &mut self.max_buy, rate, amount, stat_cmp);
     self.sum_buy = self.sum_buy + amount - prev_amount.unwrap_or(0.0);
   }
 }
@@ -77,6 +66,7 @@ impl fmt::Display for BookStats {
 }
 
 // BookWithStats operations
+
 impl BookWithStats {
   pub fn new(book: Book) -> BookWithStats {
     BookWithStats {
@@ -93,20 +83,20 @@ impl fmt::Display for BookWithStats {
 }
 
 impl BookAccounting for BookWithStats {
-  fn update_sell(&mut self, rate: String, amount: f32) -> Option<f32> {
-    let rate_f32 = rate.parse::<f32>();
+  fn update_sell(&mut self, rate: String, amount: f64) -> Option<f64> {
+    let rate_f64 = rate.parse::<f64>();
     let prev_amount = self.book.update_sell(rate, amount);
-    if let Ok(rate_f32) = rate_f32 {
-      self.stats.update_sell(rate_f32, amount, prev_amount);
+    if let Ok(rate_f64) = rate_f64 {
+      self.stats.update_sell(rate_f64, amount, prev_amount);
     };
     prev_amount
   }
 
-  fn update_buy(&mut self, rate: String, amount: f32) -> Option<f32> {
-    let rate_f32 = rate.parse::<f32>();
+  fn update_buy(&mut self, rate: String, amount: f64) -> Option<f64> {
+    let rate_f64 = rate.parse::<f64>();
     let prev_amount = self.book.update_buy(rate, amount);
-    if let Ok(rate_f32) = rate_f32 {
-      self.stats.update_buy(rate_f32, amount, prev_amount);
+    if let Ok(rate_f64) = rate_f64 {
+      self.stats.update_buy(rate_f64, amount, prev_amount);
     };
     prev_amount
   }
@@ -114,6 +104,45 @@ impl BookAccounting for BookWithStats {
   fn book_ref(&self) -> &Book {
     &self.book
   }
+}
+
+/**
+ ** Library functions
+ **/
+
+fn f64cmp(f1: &f64, f2: &f64) -> Ordering {
+  f1.partial_cmp(f2).unwrap_or(Ordering::Equal)
+}
+
+fn hash_to_vec(hash: &HashMap<String, f64>) -> (f64, Vec<Record>) {
+  let mut sum = 0.0;
+  let vec = hash.iter().filter_map(|(rate_s, amount)| {
+    rate_s.parse::<f64>()
+      .and_then(|rate| { 
+        sum += *amount; 
+        Ok(Record { rate, amount: *amount }) 
+      }).ok()
+  }).collect();
+  (sum, vec)
+}
+
+fn update_sorted_vec(idx_r: Result<usize, usize>, vec: &mut Vec<Record>, stat: &mut f64, rate: f64, amount: f64, stat_cmp: bool) {
+  if amount == 0.0 {
+    if let Ok(idx) = idx_r {
+      vec.remove(idx);
+    };
+    if *stat == rate || *stat == 0.0 {
+      *stat = vec.first().map_or(*stat, |rec| rec.rate);
+    }
+  } else if amount > 0.0  {
+    match idx_r {
+      Ok(idx) => vec[idx].amount = amount,
+      Err(idx) => vec.insert(idx, Record { rate, amount })
+    };
+    if stat_cmp || *stat == 0.0 {
+      *stat = rate
+    }
+  };
 }
 
 
@@ -157,6 +186,16 @@ mod tests {
 
 
   #[test]
+  fn stats_update_sell_shift_zero() {
+    let book_init = r#"{"currencyPair": "BTC_BCH", "orderBook": [{"0.13161901": 0.23709568, "0.13164313": "0.17328089"}, {"0.13109621": 0.2331, "0.13069621": 0.2331}]}"#;
+    let book = Book::try_from(&json::parse(book_init).unwrap()).unwrap();
+    let mut book_stats = BookWithStats::new(book).stats;
+    book_stats.update_sell(0.13161901, 0.0, Some(0.23709568));
+    assert_eq!(book_stats.min_sell, 0.13164313);
+  }
+
+
+  #[test]
   fn stats_update_sell() {
     let book_init = r#"{"currencyPair": "BTC_BCH", "orderBook": [{"0.13161901": 0.23709568, "0.13164313": "0.17328089"}, {"0.13109621": 0.2331, "0.13069621": 0.2331}]}"#;
     let book = Book::try_from(&json::parse(book_init).unwrap()).unwrap();
@@ -175,6 +214,14 @@ mod tests {
     assert_eq!(book_stats.max_buy, 0.13109621);
   }
 
+  #[test]
+  fn stats_update_buy_shift_zero() {
+    let book_init = r#"{"currencyPair": "BTC_BCH", "orderBook": [{"0.13161901": 0.23709568, "0.13164313": "0.17328089"}, {"0.13109621": 0.2331, "0.13069621": 0.2331}]}"#;
+    let book = Book::try_from(&json::parse(book_init).unwrap()).unwrap();
+    let mut book_stats = BookWithStats::new(book).stats;
+    book_stats.update_buy(0.13109621, 0.0, Some(0.2331));
+    assert_eq!(book_stats.max_buy, 0.13069621);
+  }
 
   #[test]
   fn stats_update_buy() {

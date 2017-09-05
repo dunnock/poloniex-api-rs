@@ -11,7 +11,7 @@ pub enum TradePairs {
   BtcBch,
 }
 
-type Records = HashMap<String,f32>;
+type Records = HashMap<String,f64>;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Book {
@@ -21,8 +21,8 @@ pub struct Book {
 }
 
 pub trait BookAccounting: Debug {
-  fn update_sell(&mut self, rate: String, amount: f32) -> Option<f32>;
-  fn update_buy(&mut self, rate: String, amount: f32) -> Option<f32>;
+  fn update_sell(&mut self, rate: String, amount: f64) -> Option<f64>;
+  fn update_buy(&mut self, rate: String, amount: f64) -> Option<f64>;
   fn book_ref(&self) -> &Book;
 }
 
@@ -39,10 +39,10 @@ impl Book {
 }
 
 impl BookAccounting for Book {
-  fn update_sell(&mut self, rate: String, amount: f32) -> Option<f32> {
+  fn update_sell(&mut self, rate: String, amount: f64) -> Option<f64> {
     self.sell.insert(rate, amount)
   }
-  fn update_buy(&mut self, rate: String, amount: f32) -> Option<f32> {
+  fn update_buy(&mut self, rate: String, amount: f64) -> Option<f64> {
     self.buy.insert(rate, amount)
   }
   fn book_ref(&self) -> &Book {

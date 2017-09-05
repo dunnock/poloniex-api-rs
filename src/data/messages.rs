@@ -12,14 +12,14 @@ pub struct TradeRecord {
   pub id: u64,
   pub tid: String,
   pub rate: String, 
-  pub amount: f32,
+  pub amount: f64,
 }
 
 // ["o",1,"0.12774723","0.00000000"]
 #[derive(Debug, Clone)]
 pub struct BookRecord {
   pub rate: String, 
-  pub amount: f32,
+  pub amount: f64,
 }
 
 #[derive(Debug, Clone)]
@@ -61,7 +61,7 @@ impl<'a> TryFrom<&'a JsonValue> for TradeRecord {
     let id: u64 = v[5].expect("trade record id")?;
     let tid: String = v[1].expect("trade record tid")?;
     let rate: String = v[3].expect("trade record rate")?;
-    let amount: f32 = v[4].expect("trade record amount")?;
+    let amount: f64 = v[4].expect("trade record amount")?;
 
     Ok(Self {id, tid, rate, amount})
   }
@@ -86,7 +86,7 @@ impl<'a> TryFrom<&'a JsonValue> for BookRecord {
     }
 
     let rate: String = v[2].expect("book record rate")?;
-    let amount: f32 = v[3].expect("book record amount")?;
+    let amount: f64 = v[3].expect("book record amount")?;
 
     Ok(Self {rate, amount})
   }
@@ -159,7 +159,7 @@ impl<'a> TryFrom<(&'a str, &'a JsonValue)> for Record {
   type Error = PoloError;
   fn try_from((srate, vamount): (&'a str, &'a JsonValue)) -> Result<Self, Self::Error> {
     let rate: String = srate.to_owned();
-    let amount: f32 = vamount.expect("record amount")?;
+    let amount: f64 = vamount.expect("record amount")?;
     Ok(Self::new(rate, amount))
   }
 }*/
