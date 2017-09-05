@@ -1,4 +1,6 @@
 use std::ops::{Index, IndexMut};
+use ::error::PoloError;
+use std::collections::HashMap;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum TradePairs {
@@ -6,18 +8,36 @@ pub enum TradePairs {
   BtcBch,
 }
 
-// sorted by rate, groupd by price
+/**
+ * Record struct
+ **/
 #[derive(Clone, Debug, PartialEq)]
 pub struct Record {
-  pub rate: f64, 
+  pub rate: String, 
   pub amount: f64,
+  _rate_f: f64, 
 }
+
+impl Record {
+  pub fn new(rate: String, amount: f64) -> Record {
+    Record { rate, amount, _rate_f: 0.0 }
+  }
+
+  pub fn rate_f64(&mut self) -> Result<f64, PoloError> {
+    if self._rate_f == 0.0 {
+      self._rate_f = self.rate.parse::<f64>()?;
+    };
+    Ok(self._rate_f)
+  }
+}
+
+type Records = HashMap<String,f64>;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Book {
   pub pairs: TradePairs,
-  pub sell: Vec<Record>,
-  pub buy: Vec<Record>
+  pub sell: Records,
+  pub buy: Records
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -31,8 +51,8 @@ impl Book {
   pub fn new(pairs: TradePairs) -> Book {
     Book {
       pairs,
-      sell: Vec::new(),
-      buy: Vec::new()
+      sell: HashMap::new(),
+      buy: HashMap::new()
     }
   }
 }

@@ -3,20 +3,21 @@ use std::convert::TryFrom;
 use std::str::FromStr;
 use super::book::{Book, TradePairs, Record};
 use ::error::PoloError;
+use std::collections::HashMap;
 
 // ["t","714109",1,"0.12900000","1.03377186",1504163835]
 #[derive(Debug, Clone)]
 pub struct TradeRecord {
   pub id: u64,
   pub tid: String,
-  pub rate: f64, 
+  pub rate: String, 
   pub amount: f64,
 }
 
 // ["o",1,"0.12774723","0.00000000"]
 #[derive(Debug, Clone)]
 pub struct BookRecord {
-  pub rate: f64, 
+  pub rate: String, 
   pub amount: f64,
 }
 
@@ -80,6 +81,22 @@ impl Expect<String> for JsonValue {
   }
 }
 
+impl Expect<HashMap<String, f64>> for JsonValue {
+  type Error = PoloError;
+  fn expect(&self, msg: &str) -> Result<HashMap<String, f64>, Self::Error> {
+    if !self.is_object() {
+      return Err(PoloError::wrong_data(format!("{}: expected object", msg)));
+    }
+    let mut hash = HashMap::new();
+    for (rate, amount) in self.entries() {
+      let amount: f64 = amount.expect("expected float amount")?;
+      hash.insert(rate.to_owned(), amount);
+    }; 
+    Ok(hash)
+  }
+}
+
+
 /**
  * TradeRecord conversion traits
  * use: 
@@ -99,7 +116,7 @@ impl<'a> TryFrom<&'a JsonValue> for TradeRecord {
 
     let id: u64 = v[5].expect("trade record id")?;
     let tid: String = v[1].expect("trade record tid")?;
-    let rate: f64 = v[3].expect("trade record rate")?;
+    let rate: String = v[3].expect("trade record rate")?;
     let amount: f64 = v[4].expect("trade record amount")?;
 
     Ok(Self {id, tid, rate, amount})
@@ -124,7 +141,7 @@ impl<'a> TryFrom<&'a JsonValue> for BookRecord {
       return Err(PoloError::wrong_data(format!("book record does not have 4 items {:?}", v)));
     }
 
-    let rate: f64 = v[2].expect("book record rate")?;
+    let rate: String = v[2].expect("book record rate")?;
     let amount: f64 = v[3].expect("book record amount")?;
 
     Ok(Self {rate, amount})
@@ -196,20 +213,15 @@ impl<'a> TryFrom<&'a JsonValue> for Book {
     if !v.is_object() {
       return err("initial book is not object");
     }
-    if v["orderBook"].len()!=2 || 
-       !v["orderBook"][0].is_object() || 
-       !v["orderBook"][1].is_object() 
-    {
-      return err("initial book orderBook bad format");
+    if v["orderBook"].len()!=2 {
+      return err("initial book orderBook array should contain 2 objects");
     }
 
-    let pairs = TradePairs::try_from(&v["currencyPair"])?;
-
-    let to_records = |obj: &JsonValue| obj.entries().map(Record::try_from).collect::<Result<_,_>>();
-    let sell: Vec<Record> = to_records(&v["orderBook"][0])?;
-    let buy: Vec<Record> = to_records(&v["orderBook"][1])?;
-
-    Ok(Self {pairs, sell, buy})
+    Ok(Self {
+      pairs: TradePairs::try_from(&v["currencyPair"])?, 
+      sell: v["orderBook"][0].expect("initial book orderBook")?, 
+      buy: v["orderBook"][1].expect("initial book orderBook")?
+    })
   }
 }
 
@@ -232,11 +244,13 @@ impl<'a> TryFrom<&'a JsonValue> for TradePairs {
 impl<'a> TryFrom<(&'a str, &'a JsonValue)> for Record {
   type Error = PoloError;
   fn try_from((srate, vamount): (&'a str, &'a JsonValue)) -> Result<Self, Self::Error> {
-    let rate: f64 = srate.parse::<f64>()?;
+    let rate: String = srate.to_owned();
     let amount: f64 = vamount.expect("record amount")?;
-    Ok(Self { rate, amount })
+    Ok(Self::new(rate, amount))
   }
 }
+
+
 
 /**
  * BookUpdate conversion traits
@@ -278,6 +292,10 @@ impl TryFrom<JsonValue> for BookUpdate {
 }
 
 
+/** 
+ ** TESTS TESTS TESTS
+ **/
+
 #[cfg(test)]
 mod tests {
   use super::BookUpdate;
@@ -296,7 +314,7 @@ mod tests {
 
   #[test]
   fn json_deserialize_order_update_err1() {
-    let order = r#"[189,4811424,[["o",1,"bad","0.02691207"],["t","714116",0,"0.12906425","0.05946471",1504163848]]]"#;
+    let order = r#"[189,4811424,[["o",1,"0.02691207","bad"],["t","714116",0,"0.12906425","0.05946471",1504163848]]]"#;
     match BookUpdate::from_str(order) {
       Ok(val) => panic!("processed wrong json {:?}", val),
       _ => ()
