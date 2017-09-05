@@ -138,37 +138,6 @@ impl<'a> TryFrom<&'a JsonValue> for RecordUpdate {
 }
 
 
-
-/**
- * Book conversion traits
- * use: 
- *  let val = match json::parse(r#"["i", {"currencyPair": "BTC_BCH", "orderBook": [{0.13161901: "0.23709568", 0.13164313: "0.17328089"}, {0.13169621: "0.2331"}]]"#) {
- *     json::Array(vec) => vec,
- *     _ => Err(())
- *  };
- *  let records:: Book = Book::try_from(&val)
- **/
-
-impl<'a> TryFrom<&'a JsonValue> for Book {
-  type Error = PoloError;
-  fn try_from(v: &'a JsonValue) -> Result<Self, Self::Error> {
-    let err = |msg| Err(PoloError::wrong_data(format!("{} {:?}", msg, v)));
-
-    if !v.is_object() {
-      return err("initial book is not object");
-    }
-    if v["orderBook"].len()!=2 {
-      return err("initial book orderBook array should contain 2 objects");
-    }
-
-    Ok(Self {
-      pair: TradePairs::try_from(&v["currencyPair"])?, 
-      sell: v["orderBook"][0].expect("initial book orderBook[0]")?, 
-      buy: v["orderBook"][1].expect("initial book orderBook[1]")?
-    })
-  }
-}
-
 impl<'a> TryFrom<&'a JsonValue> for TradePairs {
   type Error = PoloError;
   fn try_from(v: &'a JsonValue) -> Result<Self, Self::Error> {
