@@ -22,7 +22,7 @@ pub struct BookStats {
 #[derive(Clone, Debug, PartialEq)]
 pub struct BookWithStats {
   book: Book,
-  stats: BookStats
+  pub stats: BookStats
 }
 
 // BookStats operations
@@ -77,6 +77,12 @@ impl BookWithStats {
       book,
       stats: BookStats::new()
     }
+  }
+}
+
+impl fmt::Display for BookWithStats {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    self.stats.fmt(f)
   }
 }
 
