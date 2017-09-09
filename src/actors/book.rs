@@ -39,7 +39,16 @@ impl Actor for Accountant {
             .ok_or_else(|| err("book not initialized"))?;
           book.update_buy(rate, amount);
         },
-        _ => println!("trade order")
+        RecordUpdate::Sell(deal) => {
+          let book = tb.book_by_id(&update.book_id)
+            .ok_or_else(|| err("book not initialized"))?;
+          book.new_deal(deal.id, deal.rate, -deal.amount)?;
+        },
+        RecordUpdate::Buy(deal) => {
+          let book = tb.book_by_id(&update.book_id)
+            .ok_or_else(|| err("book not initialized"))?;
+          book.new_deal(deal.id, deal.rate, deal.amount)?;
+        },
       }
     };
     Ok(())
