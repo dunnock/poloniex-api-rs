@@ -8,7 +8,6 @@ extern crate tokio_core;
 extern crate json;
 extern crate time;
 extern crate bus;
-extern crate crossbeam;
 
 pub mod data;
 pub mod actors;

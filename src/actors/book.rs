@@ -24,19 +24,17 @@ impl Actor for Accountant {
 
     let update = BookUpdate::from_str(&msg)?;
     for rec in update.records {
+      let mut tb = self.tb.lock().unwrap();
       match rec {
         RecordUpdate::Initial(book) => {
-          let mut tb = self.tb.lock().unwrap();
           tb.add_book(book, update.book_id);
         },
         RecordUpdate::SellTotal(BookRecord {rate, amount}) => {
-          let mut tb = self.tb.lock().unwrap();
           let book = tb.book_by_id(&update.book_id)
             .ok_or_else(|| err("book not initialized"))?;
           book.update_sell(rate, amount);
         },
         RecordUpdate::BuyTotal(BookRecord {rate, amount}) => {
-          let mut tb = self.tb.lock().unwrap();
           let book = tb.book_by_id(&update.book_id)
             .ok_or_else(|| err("book not initialized"))?;
           book.update_buy(rate, amount);

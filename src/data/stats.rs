@@ -2,7 +2,11 @@ use super::book::{Book, BookAccounting};
 use std::collections::HashMap;
 use std::fmt;
 use std::cmp::Ordering;
- 
+use ::error::PoloError;
+use super::timeseries::Timeseries;
+use super::tradestats::{TradeStats, TimeStats};
+use time;
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct Record {
   pub rate: f64, 
@@ -19,14 +23,17 @@ pub struct BookStats {
   pub vec_sell: Vec<Record>,
 }
 
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct BookWithStats {
   book: Book,
-  pub stats: BookStats
+  pub stats: BookStats,
+  pub trade_series_1s: Timeseries<TradeStats>,
+  trade_stats_1m: TradeStats,
 }
 
-
 // BookStats operations
+
 impl BookStats {
   pub fn new(book: &Book) -> BookStats {
     let (sum_buy, mut vec_buy) = hash_to_vec(&book.buy);
@@ -71,6 +78,8 @@ impl BookWithStats {
   pub fn new(book: Book) -> BookWithStats {
     BookWithStats {
       stats: BookStats::new(&book),
+      trade_series_1s: Timeseries::new(),
+      trade_stats_1m: TradeStats::default(),
       book
     }
   }
@@ -78,7 +87,11 @@ impl BookWithStats {
 
 impl fmt::Display for BookWithStats {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-    self.stats.fmt(f)
+    self.stats.fmt(f)?;
+    if let Some(last_sec) = self.trade_series_1s.data.front() {
+      last_sec.fmt(f)?;
+    }
+    self.trade_stats_1m.fmt(f)
   }
 }
 
@@ -101,8 +114,30 @@ impl BookAccounting for BookWithStats {
     prev_amount
   }
 
+  fn new_deal(&mut self, id: u64, rate: String, amount: f64) -> Result<f64, PoloError> {
+    let rate_f64 = self.book.new_deal(id, rate, amount)?;
+    Ok(rate_f64)
+  }
+
   fn book_ref(&self) -> &Book {
     &self.book
+  }
+}
+
+impl TimeStats for BookWithStats {
+  fn update_stats_1s(&mut self) {
+    let timestamp = time::get_time();
+    // cleanup deals time series
+    self.book.deals.drain_until(time::Timespec { sec: timestamp.sec - 600, nsec: 0 });
+    // update stats with last second of data
+    let last_second = self.book.deals.vec_after(time::Timespec { sec: timestamp.sec - 1, nsec: timestamp.nsec });
+    let stats = TradeStats::new(last_second);
+    self.trade_stats_1m = self.trade_stats_1m + &stats;
+    self.trade_series_1s.add(stats);
+    if self.trade_series_1s.data.len() > 60 {
+      let stats_1m_ago = &self.trade_series_1s.data[self.trade_series_1s.data.len() - 60];
+      self.trade_stats_1m = self.trade_stats_1m - stats_1m_ago;
+    }
   }
 }
 
