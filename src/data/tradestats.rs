@@ -75,8 +75,8 @@ impl<'a> ops::Sub<&'a TradeStats> for TradeStats {
 impl fmt::Display for TradeStats {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     write!(f, "SELL {} to {} rate {} num {} | BUY {} to {} rate {} num {}", 
-      self.sum_sell, self.sum_sell_dest, self.sum_sell/self.sum_sell_dest, self.num_sell, 
-      self.sum_buy, self.sum_buy_dest, self.sum_buy/self.sum_buy_dest, self.num_buy)
+      self.sum_sell, self.sum_sell_dest, self.sum_sell_dest/self.sum_sell, self.num_sell, 
+      self.sum_buy, self.sum_buy_dest, self.sum_buy_dest/self.sum_buy, self.num_buy)
   }
 }
 

@@ -87,14 +87,13 @@ impl BookWithStats {
 
 impl fmt::Display for BookWithStats {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    write!(f, "  ** STATS ")?;
     self.stats.fmt(f)?;
-    write!(f, "\nstats ")?;
     if let Some(last_sec) = self.trade_series_1s.data.front() {
-      write!(f, "1s: ")?;
+      write!(f, "\n >> TRADE 1s: ")?;
       last_sec.fmt(f)?;
-      write!(f, " | ")?;
     }
-    write!(f, "1m: ")?;
+    write!(f, "\n  >> TRADE 1m: ")?;
     self.trade_stats_1m.fmt(f)
   }
 }
