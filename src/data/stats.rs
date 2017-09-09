@@ -90,10 +90,10 @@ impl fmt::Display for BookWithStats {
     write!(f, "  ** STATS ")?;
     self.stats.fmt(f)?;
     if let Some(last_sec) = self.trade_series_1s.data.front() {
-      write!(f, "\n >> TRADE 1s: ")?;
+      write!(f, "\n  >> T1s: ")?;
       last_sec.fmt(f)?;
     }
-    write!(f, "\n  >> TRADE 1m: ")?;
+    write!(f, "\n  >> T1m: ")?;
     self.trade_stats_1m.fmt(f)
   }
 }
@@ -135,7 +135,6 @@ impl TimeStats for BookWithStats {
     // update stats with last second of data
     let last_second = self.book.deals.vec_after(time::Timespec { sec: timestamp.sec - 1, nsec: timestamp.nsec });
     let stats = TradeStats::new(last_second);
-    println!("{:?}", stats);
     self.trade_stats_1m = self.trade_stats_1m + &stats;
     self.trade_series_1s.add(stats);
     if self.trade_series_1s.data.len() > 60 {
