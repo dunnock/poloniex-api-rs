@@ -29,7 +29,7 @@ pub struct BookWithStats {
   book: Book,
   pub stats: BookStats,
   pub trade_series_1s: Timeseries<TradeStats>,
-  trade_stats_1m: TradeStats,
+  pub trade_stats_1m: TradeStats,
 }
 
 // BookStats operations
