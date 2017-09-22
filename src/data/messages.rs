@@ -149,6 +149,7 @@ impl<'a> TryFrom<&'a JsonValue> for TradePairs {
     match v.as_str() {
       Some("BTC_BCH") => Ok(TradePairs::BtcBch),
       Some("BTC_ETH") => Ok(TradePairs::BtcEth),
+      Some("USDT_BTC") => Ok(TradePairs::UsdtBtc),
       _ => err("unknown trade pair")
     }
   }

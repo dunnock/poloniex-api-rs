@@ -10,6 +10,7 @@ use super::timeseries::Timeseries;
 pub enum TradePairs {
   BtcEth,
   BtcBch,
+  UsdtBtc,
 }
 
 #[derive(Clone, Debug, PartialEq)]
