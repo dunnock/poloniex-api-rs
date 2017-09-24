@@ -139,6 +139,7 @@ impl TimeStats for BookWithStats {
     self.trade_series_1s.add(stats);
     if self.trade_series_1s.data.len() > 60 {
       let stats_1m_ago = &self.trade_series_1s.data[self.trade_series_1s.data.len() - 60];
+      println!("stats_1m_ago {:?}", stats_1m_ago);
       self.trade_stats_1m = self.trade_stats_1m - stats_1m_ago;
     }
   }
