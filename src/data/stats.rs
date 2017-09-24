@@ -138,7 +138,6 @@ impl TimeStats for BookWithStats {
     self.trade_stats_1m = self.trade_stats_1m + &stats;
     self.trade_series_1s.add(stats);
     if let Some(stats_1m_ago) = self.trade_series_1s.data.get(60) {
-      println!("stats_1m_ago {:?}", stats_1m_ago);
       self.trade_stats_1m = self.trade_stats_1m - stats_1m_ago;
     }
   }
