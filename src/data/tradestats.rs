@@ -61,14 +61,18 @@ impl<'a> ops::Add<&'a Deal> for TradeStats {
 impl<'a> ops::Sub<&'a TradeStats> for TradeStats {
   type Output = TradeStats;
   fn sub(self, other: &TradeStats) -> TradeStats {
-    TradeStats {
-      sum_sell: self.sum_sell - other.sum_sell,
-      sum_sell_dest: self.sum_sell_dest - other.sum_sell_dest,
-      sum_buy: self.sum_buy - other.sum_buy,
-      sum_buy_dest: self.sum_buy_dest - other.sum_buy_dest,
-      num_sell: self.num_sell - other.num_sell,
-      num_buy: self.num_buy - other.num_buy,
-    }
+    let (mut sum_sell, mut sum_sell_dest, mut sum_buy, mut sum_buy_dest) = (0.0, 0.0, 0.0, 0.0);
+    let num_sell = self.num_sell - other.num_sell;
+    let num_buy = self.num_buy - other.num_buy;
+    if num_sell > 0 {
+      sum_sell = self.sum_sell - other.sum_sell;
+      sum_sell_dest = self.sum_sell_dest - other.sum_sell_dest;
+    };
+    if num_buy > 0 {
+      sum_buy = self.sum_buy - other.sum_buy;
+      sum_buy_dest = self.sum_buy_dest - other.sum_buy_dest;
+    };
+    TradeStats { sum_sell, sum_sell_dest, sum_buy, sum_buy_dest, num_sell, num_buy }
   }
 }
 
