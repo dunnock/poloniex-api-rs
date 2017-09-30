@@ -291,4 +291,13 @@ mod tests {
     assert_eq!(book_stats.max_buy, 100.0);
   }
 
+  #[test]
+  fn stats_skin() {
+    let book_init = r#"{"currencyPair": "BTC_BCH", "orderBook": [{"0.1111": 1.0, "0.1112": 1.0, "0.1113": 10.0}, {"0.1003": 1.0, "0.1002": 1.0, "0.1001": 10.0}]}"#;
+    let book = Book::try_from(&json::parse(book_init).unwrap()).unwrap();
+    let book_stats = BookWithStats::new(book).stats;
+    assert_eq!(book_stats.skin_sell, 0.1112);
+    assert_eq!(book_stats.skin_buy, 0.1002);
+  }
+
 }
