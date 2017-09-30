@@ -27,8 +27,14 @@ impl TradeBook {
 
   pub fn add_book(&mut self, book: Book, id: u16) {
     let pair = book.pair.clone();
-    self.books.push(BookWithStats::new(book));
-    let idx = self.books.len()-1;
+    let idx: usize;
+    if let Some(i) = self.by_pair.get(&pair) {
+      idx = *i;
+      self.books[idx] = BookWithStats::new(book);
+    } else {
+      self.books.push(BookWithStats::new(book));
+      idx = self.books.len()-1;
+    }
     self.by_id.insert(id, idx);
     self.by_pair.insert(pair, idx);
   }

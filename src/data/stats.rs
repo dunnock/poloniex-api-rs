@@ -5,6 +5,7 @@ use std::cmp::Ordering;
 use ::error::PoloError;
 use super::timeseries::Timeseries;
 use super::tradestats::{TradeStats, TimeStats};
+use super::book::Deal;
 use time;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -128,18 +129,19 @@ impl BookAccounting for BookWithStats {
 }
 
 impl TimeStats for BookWithStats {
-  fn update_stats_1s(&mut self) {
+  fn update_stats_1s(&mut self) -> Vec<&Deal> {
     let timestamp = time::get_time();
     // cleanup deals time series
     self.book.deals.drain_until(time::Timespec { sec: timestamp.sec - 600, nsec: 0 });
     // update stats with last second of data
     let last_second = self.book.deals.vec_after(time::Timespec { sec: timestamp.sec - 1, nsec: timestamp.nsec });
-    let stats = TradeStats::new(last_second);
+    let stats = TradeStats::new(&last_second);
     self.trade_stats_1m = self.trade_stats_1m + &stats;
     self.trade_series_1s.add(stats);
     if let Some(stats_1m_ago) = self.trade_series_1s.data.get(60) {
       self.trade_stats_1m = self.trade_stats_1m - stats_1m_ago;
     }
+    last_second
   }
 }
 
