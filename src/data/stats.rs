@@ -50,21 +50,25 @@ fn rate_by_amount(vec: &Vec<Record>, amount: f64) -> f64 {
 
 impl BookStats {
   pub fn new(book: &Book) -> BookStats {
-    let (sum_buy, mut vec_buy) = hash_to_vec(&book.buy);
+    let mut vec_buy = hash_to_vec(&book.buy);
     vec_buy.sort_unstable_by(|rec1, rec2| f64cmp(&rec2.rate, &rec1.rate));
-    let (sum_sell, mut vec_sell) = hash_to_vec(&book.sell);
-    vec_sell.sort_unstable_by(|rec1, rec2| f64cmp(&rec1.rate, &rec2.rate));
-
-    BookStats {
-      min_sell: vec_sell.first().map_or(0.0, |rec| rec.rate),
-      max_buy: vec_buy.first().map_or(0.0, |rec| rec.rate),
-      skin_buy: rate_by_amount(&vec_buy, sum_buy*0.1),
-      skin_sell: rate_by_amount(&vec_sell, sum_sell*0.1),
-      sum_sell,
-      sum_buy,
-      vec_buy,
-      vec_sell,
+    let max_buy = vec_buy.first().map_or(0.0, |rec| rec.rate);
+    if let Some(filter_trash) = vec_buy.iter().position(|rec| rec.rate < max_buy/10.0) {
+      vec_buy.truncate(filter_trash);
     }
+    let sum_buy = vec_buy.iter().fold(0.0, |acc, rec| acc + rec.amount);
+    let skin_buy = rate_by_amount(&vec_buy, sum_buy*0.1);
+
+    let mut vec_sell = hash_to_vec(&book.sell);
+    vec_sell.sort_unstable_by(|rec1, rec2| f64cmp(&rec1.rate, &rec2.rate));
+    let min_sell = vec_sell.first().map_or(0.0, |rec| rec.rate);
+    if let Some(filter_trash) = vec_sell.iter().position(|rec| rec.rate > min_sell*10.0) {
+      vec_sell.truncate(filter_trash);
+    }
+    let sum_sell = vec_sell.iter().fold(0.0, |acc, rec| acc + rec.amount);
+    let skin_sell = rate_by_amount(&vec_sell, sum_sell*0.1);
+
+    BookStats { max_buy, min_sell, skin_buy, skin_sell, sum_sell, sum_buy, vec_buy, vec_sell }
   }
 
   pub fn update_sell_orders(&mut self, rate: f64, amount: f64, prev_amount: Option<f64>) {
@@ -174,16 +178,13 @@ fn f64cmp(f1: &f64, f2: &f64) -> Ordering {
   f1.partial_cmp(f2).unwrap_or(Ordering::Equal)
 }
 
-fn hash_to_vec(hash: &HashMap<String, f64>) -> (f64, Vec<Record>) {
-  let mut sum = 0.0;
-  let vec = hash.iter().filter_map(|(rate_s, amount)| {
+fn hash_to_vec(hash: &HashMap<String, f64>) -> Vec<Record> {
+  hash.iter().filter_map(|(rate_s, amount)| {
     rate_s.parse::<f64>()
       .and_then(|rate| { 
-        sum += *amount; 
         Ok(Record { rate, amount: *amount }) 
       }).ok()
-  }).collect();
-  (sum, vec)
+  }).collect()
 }
 
 fn update_sorted_vec(idx_r: Result<usize, usize>, vec: &mut Vec<Record>, stat: &mut f64, rate: f64, amount: f64, stat_cmp: bool) {
