@@ -41,7 +41,6 @@ fn rate_by_amount(vec: &Vec<Record>, amount: f64) -> f64 {
   for rec in vec.iter() {
     total = total + rec.amount;
     if total>amount {
-      println!("DEBUG {} {} {:?}", total, amount, rec);
       return rec.rate
     }
   }
