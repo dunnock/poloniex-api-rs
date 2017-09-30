@@ -23,6 +23,8 @@ pub struct BookStats {
   pub vec_sell: Vec<Record>,
   pub skin_buy: f64,
   pub skin_sell: f64,
+  pub surface_buy: f64,
+  pub surface_sell: f64,
 }
 
 
@@ -57,6 +59,7 @@ impl BookStats {
     }
     let sum_buy = vec_buy.iter().fold(0.0, |acc, rec| acc + rec.amount);
     let skin_buy = rate_by_amount(&vec_buy, sum_buy*0.1);
+    let surface_buy = rate_by_amount(&vec_buy, sum_buy*0.01);
 
     let mut vec_sell = hash_to_vec(&book.sell);
     vec_sell.sort_unstable_by(|rec1, rec2| f64cmp(&rec1.rate, &rec2.rate));
@@ -66,8 +69,9 @@ impl BookStats {
     }
     let sum_sell = vec_sell.iter().fold(0.0, |acc, rec| acc + rec.amount);
     let skin_sell = rate_by_amount(&vec_sell, sum_sell*0.1);
+    let surface_sell = rate_by_amount(&vec_sell, sum_sell*0.01);
 
-    BookStats { max_buy, min_sell, skin_buy, skin_sell, sum_sell, sum_buy, vec_buy, vec_sell }
+    BookStats { max_buy, min_sell, skin_buy, skin_sell, sum_sell, sum_buy, vec_buy, vec_sell, surface_buy, surface_sell }
   }
 
   pub fn update_sell_orders(&mut self, rate: f64, amount: f64, prev_amount: Option<f64>) {
@@ -78,6 +82,9 @@ impl BookStats {
     if rate < self.skin_sell {
       self.skin_sell = rate_by_amount(&self.vec_sell, self.sum_sell*0.1)
     }
+    if rate < self.surface_sell {
+      self.surface_sell = rate_by_amount(&self.vec_sell, self.sum_sell*0.01)
+    }
   }
 
   pub fn update_buy_orders(&mut self, rate: f64, amount: f64, prev_amount: Option<f64>) {
@@ -87,6 +94,9 @@ impl BookStats {
     self.sum_buy = self.sum_buy + amount - prev_amount.unwrap_or(0.0);
     if rate > self.skin_buy {
       self.skin_buy = rate_by_amount(&self.vec_buy, self.sum_buy*0.1)
+    }
+    if rate > self.surface_buy {
+      self.surface_buy = rate_by_amount(&self.vec_buy, self.sum_buy*0.01)
     }
   }
 }
@@ -299,6 +309,26 @@ mod tests {
     let book_stats = BookWithStats::new(book).stats;
     assert_eq!(book_stats.skin_sell, 0.1112);
     assert_eq!(book_stats.skin_buy, 0.1002);
+  }
+
+  #[test]
+  fn stats_surface() {
+    let book_init = r#"{"currencyPair": "BTC_BCH", "orderBook": [{"0.1110": 10.0, "0.1111": 100.0, "0.1112": 100.0, "0.1113": 1000.0}, {"0.1004": 0.1, "0.1003": 1.0, "0.1002": 1.0, "0.1001": 10.0}]}"#;
+    let book = Book::try_from(&json::parse(book_init).unwrap()).unwrap();
+    let book_stats = BookWithStats::new(book).stats;
+    assert_eq!(book_stats.surface_sell, 0.1111);
+    assert_eq!(book_stats.surface_buy, 0.1003);
+  }
+
+  #[test]
+  fn stats_surface_update() {
+    let book_init = r#"{"currencyPair": "BTC_BCH", "orderBook": [{"0.1110": 10.0, "0.1111": 100.0, "0.1112": 100.0, "0.1113": 1000.0}, {"0.1004": 0.1, "0.1003": 1.0, "0.1002": 1.0, "0.1001": 10.0}]}"#;
+    let book = Book::try_from(&json::parse(book_init).unwrap()).unwrap();
+    let mut book_stats = BookWithStats::new(book).stats;
+    book_stats.update_sell_orders(0.1109, 10.0, None);
+    book_stats.update_buy_orders(0.1005, 0.1, None);
+    assert_eq!(book_stats.surface_sell, 0.1110);
+    assert_eq!(book_stats.surface_buy, 0.1004);
   }
 
 }
