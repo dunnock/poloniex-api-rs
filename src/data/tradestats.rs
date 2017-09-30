@@ -97,6 +97,9 @@ pub trait TimeStats {
 mod tests {
   use super::TradeStats;
   use ::data::book::Deal;
+  use time::{Timespec};
+
+  const TIME: Timespec = Timespec { sec: 1, nsec: 0 } ;
 
   #[test]
   fn stats_default() {
@@ -106,7 +109,7 @@ mod tests {
 
   #[test]
   fn stats_new() {
-    let deal = Deal { id: 1, rate: 0.1, amount: 10.0 };
+    let deal = Deal { time: TIME, id: 1, rate: 0.1, amount: 10.0 };
     let deals = vec![&deal];
     let stats = TradeStats::new(&deals);
     assert_eq!(stats.sum_buy, 10.0);
@@ -114,15 +117,15 @@ mod tests {
 
   #[test]
   fn stats_add_deal() {
-    let deal = Deal { id: 1, rate: 0.1, amount: 10.0 };
+    let deal = Deal { time: TIME, id: 1, rate: 0.1, amount: 10.0 };
     let stats = TradeStats::default() + &deal;
     assert_eq!(stats.sum_buy, 10.0);
   }
 
   #[test]
   fn stats_deals() {
-    let deal1 = Deal { id: 1, rate: 0.1, amount: 10.0 };
-    let deal2 = Deal { id: 2, rate: 0.1, amount: -10.0 };
+    let deal1 = Deal { time: TIME, id: 1, rate: 0.1, amount: 10.0 };
+    let deal2 = Deal { time: TIME, id: 2, rate: 0.1, amount: -10.0 };
     let stats = TradeStats::new(&vec![&deal1, &deal2]);
     assert_eq!((stats.sum_buy, stats.num_buy, stats.sum_buy_dest), (10.0, 1, 1.0));
     assert_eq!((stats.sum_sell, stats.num_sell, stats.sum_sell_dest), (10.0, 1, 1.0));
@@ -130,8 +133,8 @@ mod tests {
 
   #[test]
   fn stats_sub() {
-    let deal1 = Deal { id: 1, rate: 0.1, amount: 10.0 };
-    let deal2 = Deal { id: 2, rate: 0.1, amount: -10.0 };
+    let deal1 = Deal { time: TIME, id: 1, rate: 0.1, amount: 10.0 };
+    let deal2 = Deal { time: TIME, id: 2, rate: 0.1, amount: -10.0 };
     let stats1 = TradeStats::new(&vec![&deal1, &deal2]);
     let stats2 = TradeStats::new(&vec![&deal2]);
     let stats = stats1 - &stats2;
@@ -141,8 +144,8 @@ mod tests {
 
   #[test]
   fn stats_sub_exact() {
-    let deal1 = Deal { id: 1, rate: 0.1, amount: 10.0 };
-    let deal2 = Deal { id: 2, rate: 0.1, amount: -10.0 };
+    let deal1 = Deal { time: TIME, id: 1, rate: 0.1, amount: 10.0 };
+    let deal2 = Deal { time: TIME, id: 2, rate: 0.1, amount: -10.0 };
     let stats1 = TradeStats::new(&vec![&deal1, &deal2]);
     let stats2 = stats1.clone();
     let stats = stats1 - &stats2;
