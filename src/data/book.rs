@@ -19,7 +19,7 @@ pub struct Deal {
   pub time: Timespec,
   pub id: u64,
   pub rate: f64,
-  pub amount: f64
+  pub amount: f64 // amount < 0 means sell order reconciled, otherwise buy
 }
 
 impl WithTime for Deal {

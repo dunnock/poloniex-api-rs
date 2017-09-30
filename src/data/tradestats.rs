@@ -43,7 +43,7 @@ impl<'a> ops::Add<&'a TradeStats> for TradeStats {
 impl<'a> ops::Add<&'a Deal> for TradeStats {
   type Output = TradeStats;
   fn add(self, other: &Deal) -> TradeStats {
-    let (buy, num_buy, buy_dest, sell, num_sell, sell_dest) = 
+    let                       (buy, num_buy, buy_dest, sell, num_sell, sell_dest) = 
       if other.amount > 0.0 { (other.amount, 1, other.amount*other.rate, 0.0, 0, 0.0) } 
       else                  { (0.0, 0, 0.0, -other.amount, 1, -other.amount*other.rate) };
     TradeStats {

@@ -21,6 +21,8 @@ pub struct BookStats {
   pub sum_buy: f64,
   pub vec_buy: Vec<Record>,
   pub vec_sell: Vec<Record>,
+  pub skin_buy: f64,
+  pub skin_sell: f64,
 }
 
 
@@ -34,6 +36,17 @@ pub struct BookWithStats {
 
 // BookStats operations
 
+fn rate_by_amount(vec: &Vec<Record>, amount: f64) -> f64 {
+  let mut total = 0.0;
+  for rec in vec.iter() {
+    total = total + rec.amount;
+    if total>amount {
+      return rec.rate
+    }
+  }
+  return 0.0
+}
+
 impl BookStats {
   pub fn new(book: &Book) -> BookStats {
     let (sum_buy, mut vec_buy) = hash_to_vec(&book.buy);
@@ -44,6 +57,8 @@ impl BookStats {
     BookStats {
       min_sell: vec_sell.first().map_or(0.0, |rec| rec.rate),
       max_buy: vec_buy.first().map_or(0.0, |rec| rec.rate),
+      skin_buy: rate_by_amount(&vec_buy, sum_buy*0.1),
+      skin_sell: rate_by_amount(&vec_sell, sum_sell*0.1),
       sum_sell,
       sum_buy,
       vec_buy,
@@ -56,6 +71,9 @@ impl BookStats {
     let stat_cmp = self.min_sell > rate;
     update_sorted_vec(idx_r, &mut self.vec_sell, &mut self.min_sell, rate, amount, stat_cmp);
     self.sum_sell = self.sum_sell + amount - prev_amount.unwrap_or(0.0);
+    if rate < self.skin_sell {
+      self.skin_sell = rate_by_amount(&self.vec_sell, self.sum_sell*0.1)
+    }
   }
 
   pub fn update_buy_orders(&mut self, rate: f64, amount: f64, prev_amount: Option<f64>) {
@@ -63,6 +81,9 @@ impl BookStats {
     let stat_cmp = self.max_buy < rate;
     update_sorted_vec(idx_r, &mut self.vec_buy, &mut self.max_buy, rate, amount, stat_cmp);
     self.sum_buy = self.sum_buy + amount - prev_amount.unwrap_or(0.0);
+    if rate > self.skin_buy {
+      self.skin_buy = rate_by_amount(&self.vec_buy, self.sum_buy*0.1)
+    }
   }
 }
 
