@@ -1,9 +1,8 @@
 use super::book::{Book, BookAccounting};
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::fmt;
 use std::cmp::Ordering;
 use ::error::PoloError;
-use super::timeseries::Timeseries;
 use super::tradestats::{TradeStats, TimeStats};
 use super::book::Deal;
 use time;
@@ -29,7 +28,7 @@ pub struct BookStats {
 pub struct BookWithStats {
   book: Book,
   pub stats: BookStats,
-  pub trade_series_1s: Timeseries<TradeStats>,
+  pub trade_series_1s: VecDeque<TradeStats>,
   pub trade_stats_1m: TradeStats,
 }
 
@@ -79,7 +78,7 @@ impl BookWithStats {
   pub fn new(book: Book) -> BookWithStats {
     BookWithStats {
       stats: BookStats::new(&book),
-      trade_series_1s: Timeseries::new(),
+      trade_series_1s: VecDeque::new(),
       trade_stats_1m: TradeStats::default(),
       book
     }
@@ -90,7 +89,7 @@ impl fmt::Display for BookWithStats {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     write!(f, "  ** STATS ")?;
     self.stats.fmt(f)?;
-    if let Some(last_sec) = self.trade_series_1s.data.front() {
+    if let Some(last_sec) = self.trade_series_1s.front() {
       write!(f, "\n  >> T1s: ")?;
       last_sec.fmt(f)?;
     }
@@ -137,8 +136,8 @@ impl TimeStats for BookWithStats {
     let last_second = self.book.deals.vec_after(time::Timespec { sec: timestamp.sec - 1, nsec: timestamp.nsec });
     let stats = TradeStats::new(&last_second);
     self.trade_stats_1m = self.trade_stats_1m + &stats;
-    self.trade_series_1s.add(stats);
-    if let Some(stats_1m_ago) = self.trade_series_1s.data.get(60) {
+    self.trade_series_1s.push_front(stats);
+    if let Some(stats_1m_ago) = self.trade_series_1s.get(60) {
       self.trade_stats_1m = self.trade_stats_1m - stats_1m_ago;
     }
     last_second

@@ -4,7 +4,8 @@ use std::fmt::Debug;
 use json::JsonValue;
 use std::convert::TryFrom;
 use ::error::PoloError;
-use super::timeseries::Timeseries;
+use super::timeseries::{Timeseries, WithTime};
+use time::{Timespec, get_time};
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum TradePairs {
@@ -15,9 +16,16 @@ pub enum TradePairs {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Deal {
+  pub time: Timespec,
   pub id: u64,
   pub rate: f64,
   pub amount: f64
+}
+
+impl WithTime for Deal {
+  fn get_time(&self) -> Timespec {
+    self.time.clone()
+  }
 }
 
 type Records = HashMap<String,f64>;
@@ -69,7 +77,8 @@ impl BookAccounting for Book {
   }
   fn new_deal(&mut self, id: u64, rate: String, amount: f64) -> Result<f64, PoloError> {
     let rate = rate.parse().map_err(PoloError::from)?;
-    self.deals.add(Deal { id, rate, amount });
+    let time = get_time();
+    self.deals.add(Deal { time, id, rate, amount });
     Ok(rate)
   }
   fn book_ref(&self) -> &Book {

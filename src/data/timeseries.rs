@@ -1,5 +1,5 @@
 use std::collections::VecDeque;
-use time::{Timespec, get_time};
+use time::Timespec;
 use std::fmt::Debug;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -8,7 +8,11 @@ pub struct Timeseries<D: Debug> {
   timestamps: VecDeque<Timespec>
 }
 
-impl<D: Debug> Timeseries<D> {
+pub trait WithTime {
+  fn get_time(&self) -> Timespec;
+}
+
+impl<D: WithTime+Debug> Timeseries<D> {
   pub fn new() -> Timeseries<D> {
     Timeseries {
       data: VecDeque::with_capacity(1000),
@@ -17,7 +21,7 @@ impl<D: Debug> Timeseries<D> {
   }
 
   pub fn add(&mut self, rec: D) {
-    let timestamp = get_time();
+    let timestamp = rec.get_time();
     self.data.push_front(rec);
     self.timestamps.push_front(timestamp);
   }
