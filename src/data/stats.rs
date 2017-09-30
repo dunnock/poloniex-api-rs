@@ -51,14 +51,14 @@ impl BookStats {
     }
   }
 
-  pub fn update_sell(&mut self, rate: f64, amount: f64, prev_amount: Option<f64>) {
+  pub fn update_sell_orders(&mut self, rate: f64, amount: f64, prev_amount: Option<f64>) {
     let idx_r = self.vec_sell.binary_search_by(|rec| f64cmp(&rec.rate, &rate));
     let stat_cmp = self.min_sell > rate;
     update_sorted_vec(idx_r, &mut self.vec_sell, &mut self.min_sell, rate, amount, stat_cmp);
     self.sum_sell = self.sum_sell + amount - prev_amount.unwrap_or(0.0);
   }
 
-  pub fn update_buy(&mut self, rate: f64, amount: f64, prev_amount: Option<f64>) {
+  pub fn update_buy_orders(&mut self, rate: f64, amount: f64, prev_amount: Option<f64>) {
     let idx_r = self.vec_buy.binary_search_by(|rec| f64cmp(&rate, &rec.rate));
     let stat_cmp = self.max_buy < rate;
     update_sorted_vec(idx_r, &mut self.vec_buy, &mut self.max_buy, rate, amount, stat_cmp);
@@ -99,20 +99,20 @@ impl fmt::Display for BookWithStats {
 }
 
 impl BookAccounting for BookWithStats {
-  fn update_sell(&mut self, rate: String, amount: f64) -> Option<f64> {
+  fn update_sell_orders(&mut self, rate: String, amount: f64) -> Option<f64> {
     let rate_f64 = rate.parse::<f64>();
-    let prev_amount = self.book.update_sell(rate, amount);
+    let prev_amount = self.book.update_sell_orders(rate, amount);
     if let Ok(rate_f64) = rate_f64 {
-      self.stats.update_sell(rate_f64, amount, prev_amount);
+      self.stats.update_sell_orders(rate_f64, amount, prev_amount);
     };
     prev_amount
   }
 
-  fn update_buy(&mut self, rate: String, amount: f64) -> Option<f64> {
+  fn update_buy_orders(&mut self, rate: String, amount: f64) -> Option<f64> {
     let rate_f64 = rate.parse::<f64>();
-    let prev_amount = self.book.update_buy(rate, amount);
+    let prev_amount = self.book.update_buy_orders(rate, amount);
     if let Ok(rate_f64) = rate_f64 {
-      self.stats.update_buy(rate_f64, amount, prev_amount);
+      self.stats.update_buy_orders(rate_f64, amount, prev_amount);
     };
     prev_amount
   }
@@ -218,7 +218,7 @@ mod tests {
     let book_init = r#"{"currencyPair": "BTC_BCH", "orderBook": [{"0.13161901": 0.23709568, "0.13164313": "0.17328089"}, {"0.13109621": 0.2331, "0.13069621": 0.2331}]}"#;
     let book = Book::try_from(&json::parse(book_init).unwrap()).unwrap();
     let mut book_stats = BookWithStats::new(book).stats;
-    book_stats.update_sell(0.1, 0.0, None);
+    book_stats.update_sell_orders(0.1, 0.0, None);
     assert_eq!(book_stats.min_sell, 0.13161901);
   }
 
@@ -228,7 +228,7 @@ mod tests {
     let book_init = r#"{"currencyPair": "BTC_BCH", "orderBook": [{"0.13161901": 0.23709568, "0.13164313": "0.17328089"}, {"0.13109621": 0.2331, "0.13069621": 0.2331}]}"#;
     let book = Book::try_from(&json::parse(book_init).unwrap()).unwrap();
     let mut book_stats = BookWithStats::new(book).stats;
-    book_stats.update_sell(0.13161901, 0.0, Some(0.23709568));
+    book_stats.update_sell_orders(0.13161901, 0.0, Some(0.23709568));
     assert_eq!(book_stats.min_sell, 0.13164313);
   }
 
@@ -238,7 +238,7 @@ mod tests {
     let book_init = r#"{"currencyPair": "BTC_BCH", "orderBook": [{"0.13161901": 0.23709568, "0.13164313": "0.17328089"}, {"0.13109621": 0.2331, "0.13069621": 0.2331}]}"#;
     let book = Book::try_from(&json::parse(book_init).unwrap()).unwrap();
     let mut book_stats = BookWithStats::new(book).stats;
-    book_stats.update_sell(0.1, 1.0, None);
+    book_stats.update_sell_orders(0.1, 1.0, None);
     assert_eq!(book_stats.min_sell, 0.1);
   }
 
@@ -248,7 +248,7 @@ mod tests {
     let book_init = r#"{"currencyPair": "BTC_BCH", "orderBook": [{"0.13161901": 0.23709568, "0.13164313": "0.17328089"}, {"0.13109621": 0.2331, "0.13069621": 0.2331}]}"#;
     let book = Book::try_from(&json::parse(book_init).unwrap()).unwrap();
     let mut book_stats = BookWithStats::new(book).stats;
-    book_stats.update_buy(100.0, 0.0, None);
+    book_stats.update_buy_orders(100.0, 0.0, None);
     assert_eq!(book_stats.max_buy, 0.13109621);
   }
 
@@ -257,7 +257,7 @@ mod tests {
     let book_init = r#"{"currencyPair": "BTC_BCH", "orderBook": [{"0.13161901": 0.23709568, "0.13164313": "0.17328089"}, {"0.13109621": 0.2331, "0.13069621": 0.2331}]}"#;
     let book = Book::try_from(&json::parse(book_init).unwrap()).unwrap();
     let mut book_stats = BookWithStats::new(book).stats;
-    book_stats.update_buy(0.13109621, 0.0, Some(0.2331));
+    book_stats.update_buy_orders(0.13109621, 0.0, Some(0.2331));
     assert_eq!(book_stats.max_buy, 0.13069621);
   }
 
@@ -266,7 +266,7 @@ mod tests {
     let book_init = r#"{"currencyPair": "BTC_BCH", "orderBook": [{"0.13161901": 0.23709568, "0.13164313": "0.17328089"}, {"0.13109621": 0.2331, "0.13069621": 0.2331}]}"#;
     let book = Book::try_from(&json::parse(book_init).unwrap()).unwrap();
     let mut book_stats = BookWithStats::new(book).stats;
-    book_stats.update_buy(100.0, 1.0, None);
+    book_stats.update_buy_orders(100.0, 1.0, None);
     assert_eq!(book_stats.max_buy, 100.0);
   }
 

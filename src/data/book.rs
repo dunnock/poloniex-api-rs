@@ -40,10 +40,10 @@ pub struct Book {
 
 pub trait BookAccounting: Debug {
   // should return previous amount by the same rate OR None
-  fn update_sell(&mut self, rate: String, amount: f64) -> Option<f64>;
+  fn update_sell_orders(&mut self, rate: String, amount: f64) -> Option<f64>;
 
   // should return previous amount by the same rate OR None
-  fn update_buy(&mut self, rate: String, amount: f64) -> Option<f64>;
+  fn update_buy_orders(&mut self, rate: String, amount: f64) -> Option<f64>;
 
   // should return rate parse result to f64, or error wrapped in PoloError
   fn new_deal(&mut self, id: u64, rate: String, amount: f64) -> Result<f64, PoloError>;
@@ -69,10 +69,10 @@ impl Book {
 }
 
 impl BookAccounting for Book {
-  fn update_sell(&mut self, rate: String, amount: f64) -> Option<f64> {
+  fn update_sell_orders(&mut self, rate: String, amount: f64) -> Option<f64> {
     self.sell.insert(rate, amount)
   }
-  fn update_buy(&mut self, rate: String, amount: f64) -> Option<f64> {
+  fn update_buy_orders(&mut self, rate: String, amount: f64) -> Option<f64> {
     self.buy.insert(rate, amount)
   }
   fn new_deal(&mut self, id: u64, rate: String, amount: f64) -> Result<f64, PoloError> {

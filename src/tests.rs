@@ -13,6 +13,6 @@ fn model_works() {
     buy: rec_hash,
     deals: Timeseries::new()
   };
-  _b.update_buy("0.001".to_owned(), 10.0);
+  _b.update_buy_orders("0.001".to_owned(), 10.0);
   assert_eq!(_b.book_ref().buy["0.001"], 10.0);
 }

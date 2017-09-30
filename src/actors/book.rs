@@ -32,12 +32,12 @@ impl Actor for Accountant {
         RecordUpdate::SellTotal(BookRecord {rate, amount}) => {
           let book = tb.book_by_id(&update.book_id)
             .ok_or_else(|| err("book not initialized"))?;
-          book.update_sell(rate, amount);
+          book.update_sell_orders(rate, amount);
         },
         RecordUpdate::BuyTotal(BookRecord {rate, amount}) => {
           let book = tb.book_by_id(&update.book_id)
             .ok_or_else(|| err("book not initialized"))?;
-          book.update_buy(rate, amount);
+          book.update_buy_orders(rate, amount);
         },
         RecordUpdate::Sell(deal) => {
           let book = tb.book_by_id(&update.book_id)
