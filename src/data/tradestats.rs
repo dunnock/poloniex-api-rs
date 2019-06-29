@@ -96,7 +96,7 @@ pub trait TimeStats {
 #[cfg(test)]
 mod tests {
   use super::TradeStats;
-  use ::data::book::Deal;
+  use crate::data::book::Deal;
   use time::{Timespec};
 
   const TIME: Timespec = Timespec { sec: 1, nsec: 0 } ;

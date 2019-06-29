@@ -1,6 +1,6 @@
 use json::JsonValue;
 use std::collections::HashMap;
-use ::error::PoloError;
+use crate::error::PoloError;
 
 /**
  * Trait for json::JsonValue evaluation and conversion

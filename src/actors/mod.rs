@@ -2,7 +2,7 @@ pub mod book;
 pub mod logger;
 
 use bus::BusReader;
-use ::error::PoloError;
+use crate::error::PoloError;
 
 pub type Accountant = book::Accountant;
 pub type Logger = logger::Logger;

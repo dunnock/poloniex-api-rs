@@ -2,7 +2,7 @@ use super::book::{Book, BookAccounting};
 use std::collections::{HashMap, VecDeque};
 use std::fmt;
 use std::cmp::Ordering;
-use ::error::PoloError;
+use crate::error::PoloError;
 use super::tradestats::{TradeStats, TimeStats};
 use super::book::Deal;
 use time;
@@ -223,7 +223,7 @@ fn update_sorted_vec(idx_r: Result<usize, usize>, vec: &mut Vec<Record>, stat: &
 #[cfg(test)]
 mod tests {
   use super::BookWithStats;
-  use ::data::book::Book;
+  use crate::data::book::Book;
   use json;
   use std::convert::TryFrom;
 

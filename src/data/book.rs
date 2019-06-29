@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use json::JsonValue;
 use std::convert::TryFrom;
-use ::error::PoloError;
+use crate::error::PoloError;
 use super::timeseries::{Timeseries, WithTime};
 use time::{Timespec, get_time};
 

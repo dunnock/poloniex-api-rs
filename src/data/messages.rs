@@ -2,7 +2,7 @@ use json::{self, JsonValue};
 use std::convert::TryFrom;
 use std::str::FromStr;
 use super::book::{Book, TradePairs};
-use ::error::PoloError;
+use crate::error::PoloError;
 use super::json::Expect;
 
 
@@ -224,7 +224,7 @@ impl TryFrom<JsonValue> for BookUpdate {
 mod tests {
   use super::BookUpdate;
   use std::str::FromStr;
-  use json;
+  
 
   #[test]
   fn json_deserialize_order_update() {

@@ -1,7 +1,7 @@
 use super::data::book;
 use std::collections::HashMap;
-use data::book::BookAccounting;
-use data::timeseries::Timeseries;
+use crate::data::book::BookAccounting;
+use crate::data::timeseries::Timeseries;
 
 #[test]
 fn model_works() {

@@ -2,9 +2,9 @@ use tokio_core::reactor::Handle;
 use futures::future::{ok, err, Future};
 use futures::Sink;
 use websocket::{ClientBuilder, Message};
-use websocket::client::async;
+use websocket::client::r#async;
 
-type Client = async::ClientNew<async::TlsStream<async::TcpStream>>;
+type Client = r#async::ClientNew<r#async::TlsStream<r#async::TcpStream>>;
 
 // subscribe to trading pair ticker updates
 pub fn subscribe(url: &str, pairs: Vec<String>, handle: &Handle) -> Client {

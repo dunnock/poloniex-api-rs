@@ -1,9 +1,9 @@
-use ::data::messages::{BookUpdate, RecordUpdate, BookRecord};
-use ::data::trade::TradeBook;
+use crate::data::messages::{BookUpdate, RecordUpdate, BookRecord};
+use crate::data::trade::TradeBook;
 use std::str::FromStr;
 use super::Actor;
 use std::sync::{Arc, Mutex};
-use ::error::PoloError;
+use crate::error::PoloError;
 
 #[derive(Clone)]
 pub struct Accountant {
@@ -62,9 +62,9 @@ impl Actor for Accountant {
 mod tests {
   use super::Accountant;
   use bus::Bus;
-  use ::actors::Actor;
-  use ::data::trade::TradeBook;
-  use ::data::messages::{BookUpdate, RecordUpdate};
+  use crate::actors::Actor;
+  use crate::data::trade::TradeBook;
+  use crate::data::messages::{BookUpdate, RecordUpdate};
   use std::str::FromStr;
   use std::sync::{Arc, Mutex};
   use std::thread;

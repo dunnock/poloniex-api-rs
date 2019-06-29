@@ -1,6 +1,6 @@
 use time::get_time;
 use super::Actor;
-use ::error::PoloError;
+use crate::error::PoloError;
 
 #[derive(Clone)]
 pub struct Logger;
