@@ -1,4 +1,3 @@
-extern crate test;
 extern crate websocket;
 extern crate futures;
 extern crate tokio_core;
