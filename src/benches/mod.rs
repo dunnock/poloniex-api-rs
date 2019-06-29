@@ -1,10 +1,12 @@
+extern crate test;
+
 /** 
  ** TESTS TESTS TESTS
  **/
 
 #[cfg(test)]
 mod tests {
-  use super::BookUpdate;
+  use crate::data::messages::BookUpdate;
   use std::str::FromStr;
   use test::Bencher;
   use json;
