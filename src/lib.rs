@@ -1,6 +1,3 @@
-#![feature(try_from)]
-#![feature(test)]
-
 extern crate test;
 extern crate websocket;
 extern crate futures;
