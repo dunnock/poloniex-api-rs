@@ -11,7 +11,14 @@ use time::{Timespec, get_time};
 pub enum TradePairs {
   BtcEth,
   BtcBch,
+  BtcLtc,
+  BtcZec,
   UsdtBtc,
+  UsdtEth,
+  UsdtLtc,
+  UsdtBch,
+  UsdtZec,
+  UsdtXrp,
 }
 
 #[derive(Clone, Debug, PartialEq)]
