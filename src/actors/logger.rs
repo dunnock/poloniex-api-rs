@@ -1,5 +1,5 @@
 use time::get_time;
-use super::Actor;
+use super::Processor;
 use crate::error::PoloError;
 
 #[derive(Clone)]
@@ -11,7 +11,7 @@ impl Logger {
   }
 }
 
-impl Actor for Logger {
+impl Processor for Logger {
   fn process_message(&mut self, msg: String) -> Result<(),PoloError> {
     let ts = get_time();
     println!("{}.{} {}", ts.sec, ts.nsec/1000000, msg);

@@ -1,7 +1,7 @@
 use crate::data::messages::{BookUpdate, RecordUpdate, BookRecord};
 use crate::data::trade::TradeBook;
 use std::str::FromStr;
-use super::Actor;
+use super::Processor;
 use std::sync::{Arc, Mutex};
 use crate::error::PoloError;
 
@@ -18,7 +18,7 @@ impl Accountant {
   }
 }
 
-impl Actor for Accountant {
+impl Processor for Accountant {
   fn process_message(&mut self, msg: String) -> Result<(),PoloError> {
     let err = |title| PoloError::wrong_data(format!("{} {:?}", title, msg));
 
@@ -61,27 +61,19 @@ impl Actor for Accountant {
 #[cfg(test)]
 mod tests {
   use super::Accountant;
-  use bus::Bus;
-  use crate::actors::Actor;
+  use crate::actors::Processor;
   use crate::data::trade::TradeBook;
   use crate::data::messages::{BookUpdate, RecordUpdate};
   use std::str::FromStr;
-  use std::sync::{Arc, Mutex};
-  use std::thread;
-
+  use std::sync::{Arc, Mutex};  
 
   #[test]
   fn initial_order() {
     let tb = Arc::new(Mutex::new(TradeBook::new()));
-    let mut actor = Accountant::new(&tb);
+    let mut accountant = Accountant::new(&tb);
     let order = String::from(r#"[189, 5130995, [["i", {"currencyPair": "BTC_BCH", "orderBook": [{"0.13161901": 0.23709568, "0.13164313": "0.17328089"}, {"0.13169621": 0.2331}]}]]]"#);
 
-    let mut bus = Bus::new(1);
-    let ch1 = bus.add_rx();
-    let th = thread::spawn(move || actor.listen(ch1));
-    bus.broadcast(Some(order.clone()));
-    bus.broadcast(None);
-    println!("{:?}", th.join());
+    accountant.process_message(order.clone()).unwrap();
 
     let mut tb_mut = tb.lock().unwrap();
     let actor_book = tb_mut.book_by_id(&189).unwrap().book_ref();
