@@ -1,29 +1,28 @@
-use futures::future::{ok, err, Future};
-use futures::Sink;
-use websocket::{ClientBuilder, Message};
-use websocket::client::r#async;
+use futures::future::Future;
+use futures::{Sink};
+use websocket::{ClientBuilder, Message, WebSocketError};
+use websocket::r#async::{TcpStream, Client};
+use websocket::client::r#async::TlsStream;
 
-type Client = r#async::ClientNew<r#async::TlsStream<r#async::TcpStream>>;
+type ClientTcp = Client<TlsStream<TcpStream>>;
 
 // subscribe to trading pair ticker updates
-pub fn subscribe(url: &str, pairs: Vec<String>) -> Client {
-	let client_future = ClientBuilder::new(url)
-		.unwrap()
+pub fn subscribe(url: &str, pairs: Vec<String>) -> impl Future<Item=ClientTcp, Error=WebSocketError> {
+	ClientBuilder::new(url).unwrap()
 		.async_connect_secure(None)
-		.and_then(move |(mut client, hdr)| {
+		.and_then(move |(mut client, _)| {
 			for pair in pairs.iter() {
 				let msg = message_subscribe(pair).into();
 				match client.start_send(msg) {
-					Err(status) => return err(status),
+					Err(status) => return Err(status),
 					_ => ()
 				};
-			}
+			};
 			match client.poll_complete() {
-				Err(status) => return err(status),
-				_ => return ok((client, hdr))
+				Err(status) => Err(status),
+				_ => Ok(client)
 			}
-    });
-		Box::new(client_future)
+    })
 }
 
 fn message_subscribe(channel: &str) -> Message {

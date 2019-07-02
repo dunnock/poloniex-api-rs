@@ -42,13 +42,11 @@ impl Processor for Accountant {
         RecordUpdate::Sell(deal) => {
           let book = tb.book_by_id(&update.book_id)
             .ok_or_else(|| err("book not initialized"))?;
-          println!("new sell {:?}", deal);
           book.new_deal(deal.id, deal.rate, -deal.amount)?;
         },
         RecordUpdate::Buy(deal) => {
           let book = tb.book_by_id(&update.book_id)
             .ok_or_else(|| err("book not initialized"))?;
-          println!("new buy {:?}", deal);
           book.new_deal(deal.id, deal.rate, deal.amount)?;
         },
       }
