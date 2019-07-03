@@ -31,7 +31,7 @@ pub struct Deal {
 
 impl WithTime for Deal {
   fn get_time(&self) -> Timespec {
-    self.time.clone()
+    self.time
   }
 }
 

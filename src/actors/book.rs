@@ -30,22 +30,22 @@ impl Processor for Accountant {
           tb.add_book(book, update.book_id);
         },
         RecordUpdate::SellTotal(BookRecord {rate, amount}) => {
-          let book = tb.book_by_id(&update.book_id)
+          let book = tb.book_by_id(update.book_id)
             .ok_or_else(|| err("book not initialized"))?;
           book.update_sell_orders(rate, amount);
         },
         RecordUpdate::BuyTotal(BookRecord {rate, amount}) => {
-          let book = tb.book_by_id(&update.book_id)
+          let book = tb.book_by_id(update.book_id)
             .ok_or_else(|| err("book not initialized"))?;
           book.update_buy_orders(rate, amount);
         },
         RecordUpdate::Sell(deal) => {
-          let book = tb.book_by_id(&update.book_id)
+          let book = tb.book_by_id(update.book_id)
             .ok_or_else(|| err("book not initialized"))?;
           book.new_deal(deal.id, deal.rate, -deal.amount)?;
         },
         RecordUpdate::Buy(deal) => {
-          let book = tb.book_by_id(&update.book_id)
+          let book = tb.book_by_id(update.book_id)
             .ok_or_else(|| err("book not initialized"))?;
           book.new_deal(deal.id, deal.rate, deal.amount)?;
         },
@@ -74,7 +74,7 @@ mod tests {
     accountant.process_message(order.clone()).unwrap();
 
     let mut tb_mut = tb.lock().unwrap();
-    let actor_book = tb_mut.book_by_id(&189).unwrap().book_ref();
+    let actor_book = tb_mut.book_by_id(189).unwrap().book_ref();
     match BookUpdate::from_str(&order).unwrap().records[0] {
       RecordUpdate::Initial(ref book) => assert_eq!(*book, *actor_book),
       _ => panic!("BookUpdate::from_str were not able to parse RecordUpdate::Initial")

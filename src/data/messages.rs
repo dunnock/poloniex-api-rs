@@ -229,36 +229,32 @@ mod tests {
   #[test]
   fn json_deserialize_order_update() {
     let order = r#"[189,4811424,[["o",1,"0.12906425","0.02691207"],["t","714116",0,"0.12906425","0.05946471",1504163848]]]"#;
-    match BookUpdate::from_str(order) {
-      Err(error) => panic!("failed to process json {}", error),
-      _ => ()
+    if let Err(error) = BookUpdate::from_str(order) {
+      panic!("failed to process json {}", error);
     }
   }
 
   #[test]
   fn json_deserialize_order_update_err1() {
     let order = r#"[189,4811424,[["o",1,"0.02691207","bad"],["t","714116",0,"0.12906425","0.05946471",1504163848]]]"#;
-    match BookUpdate::from_str(order) {
-      Ok(val) => panic!("processed wrong json {:?}", val),
-      _ => ()
+    if let Ok(val) = BookUpdate::from_str(order) {
+      panic!("processed wrong json {:?}", val);
     }
   }
 
   #[test]
   fn json_deserialize_order_update_err2() {
     let order = r#"[189,4811424]"#;
-    match BookUpdate::from_str(order) {
-      Ok(val) => panic!("processed wrong json {:?}", val),
-      _ => ()
+    if let Ok(val) = BookUpdate::from_str(order) {
+       panic!("processed wrong json {:?}", val);
     }
   }
 
   #[test]
   fn json_deserialize_order_update_err3() {
     let order = r#"[189,4811424,[["f",1,"0.120000","0.02691207"],["t","714116",0,"0.12906425","0.05946471",1504163848]]]"#;
-    match BookUpdate::from_str(order) {
-      Ok(val) => panic!("processed wrong json {:?}", val),
-      _ => ()
+    if let Ok(val) = BookUpdate::from_str(order) {
+       panic!("processed wrong json {:?}", val);
     }
   }
 
@@ -266,18 +262,16 @@ mod tests {
   #[test]
   fn json_deserialize_order_update_err4() {
     let order = r#"[189,4811424,[["o",3,"0.120000","0.02691207"],["t","714116",0,"0.12906425","0.05946471",1504163848]]]"#;
-    match BookUpdate::from_str(order) {
-      Ok(val) => panic!("processed wrong json {:?}", val),
-      _ => ()
+    if let Ok(val) = BookUpdate::from_str(order) {
+      panic!("processed wrong json {:?}", val);
     }
   }
 
   #[test]
   fn json_deserialize_order_update_initial() {
     let order = r#"[189, 5130995, [["i", {"currencyPair": "BTC_BCH", "orderBook": [{"0.13161901": 0.23709568, "0.13164313": "0.17328089"}, {"0.13169621": 0.2331}]}]]]"#;
-    match BookUpdate::from_str(order) {
-      Err(error) => panic!("failed to process json {:?}", error),
-      _ => ()
+    if let Err(error) = BookUpdate::from_str(order) {
+       panic!("failed to process json {:?}", error);
     }
   }
 

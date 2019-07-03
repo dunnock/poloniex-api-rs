@@ -13,9 +13,8 @@ pub fn subscribe(url: &str, pairs: Vec<String>) -> impl Future<Item=ClientTcp, E
 		.and_then(move |(mut client, _)| {
 			for pair in pairs.iter() {
 				let msg = message_subscribe(pair).into();
-				match client.start_send(msg) {
-					Err(status) => return Err(status),
-					_ => ()
+				if let Err(status) = client.start_send(msg) {
+					 return Err(status);
 				};
 			};
 			match client.poll_complete() {

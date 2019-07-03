@@ -7,8 +7,7 @@ pub enum TradeOp {
   Buy,
 }
 
-
-#[derive(Debug, PartialEq)]
+#[derive(Default, Debug, PartialEq)]
 pub struct TradeBook {
   pub books: Vec<BookWithStats>,
   pub by_id: HashMap<u16, usize>,
@@ -39,8 +38,8 @@ impl TradeBook {
     self.by_pair.insert(pair, idx);
   }
 
-  pub fn book_by_id(&mut self, id: &u16) -> Option<&mut BookAccounting> {
-    if let Some(idx) = self.by_id.get(id) {
+  pub fn book_by_id(&mut self, id: u16) -> Option<&mut BookAccounting> {
+    if let Some(idx) = self.by_id.get(&id) {
       Some(&mut self.books[*idx])
     } else {
       None

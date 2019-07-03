@@ -28,20 +28,16 @@ impl<D: WithTime+Debug> Timeseries<D> {
 
   pub fn drain_until(&mut self, until: Timespec) {
 //    let mut drain: Vec<D> = Vec::with_capacity(100);
-    loop {
-      if let Some(timestamp) = self.timestamps.pop_back() {
-        if timestamp < until {
-          if let None = self.data.pop_back() {
-            panic!("Timeseries::drain_until data and timestamp collections mismatch {:?} {:?}", self.data, self.timestamps);
-          }
-        } else {
-          self.timestamps.push_back(timestamp);
-          break;
+    while let Some(timestamp) = self.timestamps.pop_back() {
+      if timestamp < until {
+        if self.data.pop_back().is_none() {
+          panic!("Timeseries::drain_until data and timestamp collections mismatch {:?} {:?}", self.data, self.timestamps);
         }
       } else {
-          break;
+        self.timestamps.push_back(timestamp);
+        break;
       }
-    };
+    }
 //    drain
   }
 
@@ -49,16 +45,12 @@ impl<D: WithTime+Debug> Timeseries<D> {
     let mut items = Vec::new();
     let mut dataiter = self.data.iter();
     let mut timeiter = self.timestamps.iter();
-    loop {
-      if let Some(timestamp) = timeiter.next() {
-        if *timestamp > after {
-          if let Some(item) = dataiter.next() {
-            items.push(item);
-          } else {
-            panic!("Timeseries::vec_after data and timestamp collections mismatch {:?} {:?}", self.data, self.timestamps);
-          }
+    while let Some(timestamp) = timeiter.next() {
+      if *timestamp > after {
+        if let Some(item) = dataiter.next() {
+          items.push(item);
         } else {
-          break;
+          panic!("Timeseries::vec_after data and timestamp collections mismatch {:?} {:?}", self.data, self.timestamps);
         }
       } else {
         break;

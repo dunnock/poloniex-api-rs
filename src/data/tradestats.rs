@@ -21,8 +21,8 @@ impl Default for TradeStats {
 }
 
 impl TradeStats {
-  pub fn new(deals: &Vec<&Deal>) -> TradeStats {
-    deals.into_iter().fold(TradeStats::default(), |acc, deal| acc + *deal)
+  pub fn new(deals: &[&Deal]) -> TradeStats {
+    deals.iter().fold(TradeStats::default(), |acc, deal| acc + *deal)
   }
 }
 
@@ -126,7 +126,7 @@ mod tests {
   fn stats_deals() {
     let deal1 = Deal { time: TIME, id: 1, rate: 0.1, amount: 10.0 };
     let deal2 = Deal { time: TIME, id: 2, rate: 0.1, amount: -10.0 };
-    let stats = TradeStats::new(&vec![&deal1, &deal2]);
+    let stats = TradeStats::new(&[&deal1, &deal2]);
     assert_eq!((stats.sum_buy, stats.num_buy, stats.sum_buy_dest), (10.0, 1, 1.0));
     assert_eq!((stats.sum_sell, stats.num_sell, stats.sum_sell_dest), (10.0, 1, 1.0));
   }
@@ -135,8 +135,8 @@ mod tests {
   fn stats_sub() {
     let deal1 = Deal { time: TIME, id: 1, rate: 0.1, amount: 10.0 };
     let deal2 = Deal { time: TIME, id: 2, rate: 0.1, amount: -10.0 };
-    let stats1 = TradeStats::new(&vec![&deal1, &deal2]);
-    let stats2 = TradeStats::new(&vec![&deal2]);
+    let stats1 = TradeStats::new(&[&deal1, &deal2]);
+    let stats2 = TradeStats::new(&[&deal2]);
     let stats = stats1 - &stats2;
     assert_eq!((stats.sum_buy, stats.num_buy), (10.0, 1));
     assert_eq!((stats.sum_sell, stats.num_sell), (0.0, 0));
@@ -146,8 +146,8 @@ mod tests {
   fn stats_sub_exact() {
     let deal1 = Deal { time: TIME, id: 1, rate: 0.1, amount: 10.0 };
     let deal2 = Deal { time: TIME, id: 2, rate: 0.1, amount: -10.0 };
-    let stats1 = TradeStats::new(&vec![&deal1, &deal2]);
-    let stats2 = stats1.clone();
+    let stats1 = TradeStats::new(&[&deal1, &deal2]);
+    let stats2 = stats1;
     let stats = stats1 - &stats2;
     assert_eq!(stats, TradeStats::default());
   }
