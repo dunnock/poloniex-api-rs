@@ -6,6 +6,7 @@ use std::convert::TryFrom;
 use crate::error::PoloError;
 use super::timeseries::{Timeseries, WithTime};
 use time::{Timespec, get_time};
+use serde::Serialize;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum TradePairs {
@@ -21,8 +22,9 @@ pub enum TradePairs {
   UsdtXrp,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct Deal {
+  #[serde(with = "serialize_timespec")]
   pub time: Timespec,
   pub id: u64,
   pub rate: f64,
@@ -34,6 +36,19 @@ impl WithTime for Deal {
     self.time
   }
 }
+
+mod serialize_timespec {
+    use time::Timespec;
+    use serde::{self, Serializer};
+
+    pub fn serialize<S>(time: &Timespec, serializer: S) -> Result<S::Ok, S::Error>
+      where S: Serializer,
+    {
+        let s = format!("{}.{}", time.sec, time.nsec);
+        serializer.serialize_str(&s)
+    }
+}
+
 
 type Records = HashMap<String,f64>;
 

@@ -6,6 +6,7 @@ use crate::error::PoloError;
 use super::tradestats::{TradeStats, TimeStats};
 use super::book::Deal;
 use time;
+use time::{Timespec, get_time};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Record {
@@ -31,6 +32,7 @@ pub struct BookStats {
 #[derive(Clone, Debug, PartialEq)]
 pub struct BookWithStats {
   book: Book,
+  pub last_updated: Timespec,
   pub stats: BookStats,
   pub trade_series_1s: VecDeque<TradeStats>,
   pub trade_stats_1m: TradeStats,
@@ -112,6 +114,7 @@ impl fmt::Display for BookStats {
 impl BookWithStats {
   pub fn new(book: Book) -> BookWithStats {
     BookWithStats {
+      last_updated: get_time(),
       stats: BookStats::new(&book),
       trade_series_1s: VecDeque::new(),
       trade_stats_1m: TradeStats::default(),
@@ -135,6 +138,7 @@ impl fmt::Display for BookWithStats {
 
 impl BookAccounting for BookWithStats {
   fn update_sell_orders(&mut self, rate: String, amount: f64) -> Option<f64> {
+    self.last_updated = get_time();
     let rate_f64 = rate.parse::<f64>();
     let prev_amount = self.book.update_sell_orders(rate, amount);
     if let Ok(rate_f64) = rate_f64 {
@@ -144,6 +148,7 @@ impl BookAccounting for BookWithStats {
   }
 
   fn update_buy_orders(&mut self, rate: String, amount: f64) -> Option<f64> {
+    self.last_updated = get_time();
     let rate_f64 = rate.parse::<f64>();
     let prev_amount = self.book.update_buy_orders(rate, amount);
     if let Ok(rate_f64) = rate_f64 {
@@ -153,6 +158,7 @@ impl BookAccounting for BookWithStats {
   }
 
   fn new_deal(&mut self, id: u64, rate: String, amount: f64) -> Result<f64, PoloError> {
+    self.last_updated = get_time();
     let rate_f64 = self.book.new_deal(id, rate, amount)?;
     Ok(rate_f64)
   }
