@@ -11,10 +11,8 @@ pub struct Accountant {
 }
 
 impl Accountant {
-  pub fn new(tb: &Arc<Mutex<TradeBook>>) -> Accountant {
-    Accountant {
-      tb: tb.clone()
-    }
+  pub fn new(tb: Arc<Mutex<TradeBook>>) -> Accountant {
+    Accountant { tb }
   }
 }
 
