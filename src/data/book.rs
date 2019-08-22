@@ -92,10 +92,18 @@ impl Book {
 
 impl BookAccounting for Book {
   fn update_sell_orders(&mut self, rate: String, amount: f64) -> Option<f64> {
-    self.sell.insert(rate, amount)
+    if amount == 0.0 {
+      self.sell.remove(&rate)
+    } else {
+      self.sell.insert(rate, amount)
+    }
   }
   fn update_buy_orders(&mut self, rate: String, amount: f64) -> Option<f64> {
-    self.buy.insert(rate, amount)
+    if amount == 0.0 {
+      self.buy.remove(&rate)
+    } else {
+      self.buy.insert(rate, amount)
+    }
   }
   fn new_deal(&mut self, id: u64, rate: String, amount: f64) -> Result<f64, PoloError> {
     let rate = rate.parse().map_err(PoloError::from)?;

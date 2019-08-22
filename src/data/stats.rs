@@ -40,7 +40,7 @@ pub struct BookWithStats {
 
 // BookStats operations
 
-fn rate_by_amount(vec: &[Record], amount: f64) -> f64 {
+pub fn rate_by_amount(vec: &[Record], amount: f64) -> f64 {
   let mut total = 0.0;
   for rec in vec.iter() {
     total += rec.amount;
