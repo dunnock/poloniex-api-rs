@@ -9,7 +9,7 @@ use time;
 use time::{Timespec, get_time};
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Record {
+struct Record {
   pub rate: f64, 
   pub amount: f64
 }
@@ -189,11 +189,11 @@ impl TimeStats for BookWithStats {
  ** Library functions
  **/
 
-fn f64cmp(f1: f64, f2: f64) -> Ordering {
+pub fn f64cmp(f1: f64, f2: f64) -> Ordering {
   f1.partial_cmp(&f2).unwrap_or(Ordering::Equal)
 }
 
-fn hash_to_vec(hash: &HashMap<String, f64>) -> Vec<Record> {
+pub fn hash_to_vec(hash: &HashMap<String, f64>) -> Vec<Record> {
   hash.iter().filter_map(|(rate_s, amount)| {
     rate_s.parse::<f64>()
       .and_then(|rate| { 
