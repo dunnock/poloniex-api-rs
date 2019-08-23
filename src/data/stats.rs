@@ -2,14 +2,15 @@ use super::book::{Book, BookAccounting};
 use std::collections::{HashMap, VecDeque};
 use std::fmt;
 use std::cmp::Ordering;
+use serde::{Serialize, Deserialize};
 use crate::error::PoloError;
 use super::tradestats::{TradeStats, TimeStats};
 use super::book::Deal;
 use time;
 use time::{Timespec, get_time};
 
-#[derive(Clone, Debug, PartialEq)]
-struct Record {
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct Record {
   pub rate: f64, 
   pub amount: f64
 }

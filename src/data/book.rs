@@ -90,6 +90,12 @@ impl Book {
   }
 }
 
+impl Default for Book {
+  fn default() -> Book {
+    Book::new(TradePairs::UsdtBtc)
+  }
+}
+
 impl BookAccounting for Book {
   fn update_sell_orders(&mut self, rate: String, amount: f64) -> Option<f64> {
     if amount == 0.0 {
