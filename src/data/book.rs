@@ -72,9 +72,13 @@ pub trait BookAccounting: Debug {
 
   // reference to the actual Book struct (for wrappers)
   fn book_ref(&self) -> &Book;
+
+  // reset all trade orders
+  fn reset_orders(&mut self);
 }
 
 
+const CAPACITY: usize = 10_000;
 
 
 // Book operations
@@ -83,8 +87,8 @@ impl Book {
   pub fn new(pair: TradePairs) -> Book {
     Book {
       pair,
-      sell: HashMap::with_capacity(1000),
-      buy: HashMap::with_capacity(1000),
+      sell: HashMap::with_capacity(CAPACITY),
+      buy: HashMap::with_capacity(CAPACITY),
       deals: Timeseries::new(),
     }
   }
@@ -119,6 +123,10 @@ impl BookAccounting for Book {
   }
   fn book_ref(&self) -> &Book {
     &self
+  }
+  fn reset_orders(&mut self) {
+    self.sell = HashMap::with_capacity(CAPACITY);
+    self.buy = HashMap::with_capacity(CAPACITY);
   }
 }
 

@@ -167,6 +167,10 @@ impl BookAccounting for BookWithStats {
   fn book_ref(&self) -> &Book {
     &self.book
   }
+
+  fn reset_orders(&mut self) {
+    self.book.reset_orders();
+  }
 }
 
 impl TimeStats for BookWithStats {
