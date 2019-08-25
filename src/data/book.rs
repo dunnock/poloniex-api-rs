@@ -54,6 +54,7 @@ type Records = HashMap<String,f64>;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Book {
+  pub last_updated: Timespec,
   pub pair: TradePairs,
   pub sell: Records,
   pub buy: Records,
@@ -86,6 +87,7 @@ const CAPACITY: usize = 10_000;
 impl Book {
   pub fn new(pair: TradePairs) -> Book {
     Book {
+      last_updated: get_time(),
       pair,
       sell: HashMap::with_capacity(CAPACITY),
       buy: HashMap::with_capacity(CAPACITY),
@@ -102,6 +104,7 @@ impl Default for Book {
 
 impl BookAccounting for Book {
   fn update_sell_orders(&mut self, rate: String, amount: f64) -> Option<f64> {
+    self.last_updated = get_time();
     if amount == 0.0 {
       self.sell.remove(&rate)
     } else {
@@ -109,6 +112,7 @@ impl BookAccounting for Book {
     }
   }
   fn update_buy_orders(&mut self, rate: String, amount: f64) -> Option<f64> {
+    self.last_updated = get_time();
     if amount == 0.0 {
       self.buy.remove(&rate)
     } else {
@@ -116,6 +120,7 @@ impl BookAccounting for Book {
     }
   }
   fn new_deal(&mut self, id: u64, rate: String, amount: f64) -> Result<f64, PoloError> {
+    self.last_updated = get_time();
     let rate = rate.parse().map_err(PoloError::from)?;
     let time = get_time();
     self.deals.add(Deal { time, id, rate, amount });
@@ -125,6 +130,7 @@ impl BookAccounting for Book {
     &self
   }
   fn reset_orders(&mut self) {
+    self.last_updated = get_time();
     self.sell = HashMap::with_capacity(CAPACITY);
     self.buy = HashMap::with_capacity(CAPACITY);
   }
@@ -154,6 +160,7 @@ impl<'a> TryFrom<&'a JsonValue> for Book {
     }
 
     Ok(Self {
+      last_updated: get_time(),
       pair: TradePairs::try_from(&v["currencyPair"])?, 
       sell: v["orderBook"][0].expect("initial book orderBook[0]")?, 
       buy: v["orderBook"][1].expect("initial book orderBook[1]")?,
