@@ -1,12 +1,12 @@
-extern crate websocket;
 extern crate futures;
 extern crate json;
 extern crate time;
+extern crate websocket;
 
-pub mod data;
 pub mod actors;
-pub mod push;
+pub mod data;
 pub mod error;
+pub mod push;
 
 #[cfg(test)]
 mod tests;
