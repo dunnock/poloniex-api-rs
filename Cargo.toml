@@ -9,7 +9,6 @@ tungstenite = "0.9"
 tokio-tungstenite = { git="https://github.com/dbcfd/tokio-tungstenite", branch="tokio2" }
 tokio = "0.2.0-alpha.6"
 url = "2.1"
-anyhow = "1"
 futures = "0.3"
 json = "0.12"
 time = "0.1"
