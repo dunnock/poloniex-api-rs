@@ -5,8 +5,12 @@ version = "0.1.0"
 edition = "2018"
 
 [dependencies]
-futures = "0.1"
-websocket = "0.22.4"
-json = "0.11"
+tungstenite = "0.9"
+tokio-tungstenite = { git="https://github.com/dbcfd/tokio-tungstenite", branch="tokio2" }
+tokio = "0.2.0-alpha.6"
+url = "2.1"
+anyhow = "1"
+futures = "0.3"
+json = "0.12"
 time = "0.1"
 serde = { version = "1.0", features = ["derive"] }

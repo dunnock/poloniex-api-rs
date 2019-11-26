@@ -44,7 +44,7 @@ impl error::Error for PoloError {
         }
     }
 
-    fn cause(&self) -> Option<&error::Error> {
+    fn cause(&self) -> Option<&dyn error::Error> {
         match *self {
             // N.B. Both of these implicitly cast `err` from their concrete
             // types (either `&io::Error` or `&num::ParseIntError`)
