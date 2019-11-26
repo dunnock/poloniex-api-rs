@@ -1,4 +1,5 @@
-use tungstenite::{protocol::Message, error::Error};
+pub use tungstenite::protocol::Message;
+use tungstenite::error::Error;
 use tokio_tungstenite::{connect_async, WebSocketStream, MaybeTlsStream};
 use url;
 
