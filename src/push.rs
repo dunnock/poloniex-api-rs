@@ -1,5 +1,6 @@
 pub use tungstenite::protocol::Message;
 use tungstenite::error::Error;
+use futures::SinkExt;
 use tokio_tungstenite::{connect_async, WebSocketStream, MaybeTlsStream};
 use url;
 
