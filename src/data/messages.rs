@@ -1,3 +1,4 @@
+// TODO: Convert to serde deserialization!
 use super::book::{Book, TradePairs};
 use super::json::Expect;
 use crate::error::PoloError;
