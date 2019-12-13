@@ -7,7 +7,8 @@ use serde::Serialize;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::fmt::Debug;
-use time::{get_time, Timespec};
+use time::Timespec;
+use crate::get_time;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum TradePairs {

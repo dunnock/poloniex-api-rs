@@ -7,7 +7,8 @@ use std::cmp::Ordering;
 use std::collections::{HashMap, VecDeque};
 use std::fmt;
 use time;
-use time::{get_time, Timespec};
+use time::Timespec;
+use crate::get_time;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Record {

@@ -12,7 +12,7 @@ fn model_works() {
         sell: rec_hash.clone(),
         buy: rec_hash,
         deals: Timeseries::new(),
-        last_updated: time::get_time()
+        last_updated: crate::get_time()
     };
     _b.update_buy_orders("0.001".to_owned(), 10.0);
     assert_eq!(_b.book_ref().buy["0.001"], 10.0);
