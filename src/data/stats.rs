@@ -257,21 +257,25 @@ fn update_sorted_vec(
     amount: f64,
     stat_cmp: bool,
 ) {
-    if amount == 0.0 {
-        if let Ok(idx) = idx_r {
-            vec.remove(idx);
-        };
-        if *stat == rate || *stat == 0.0 {
-            *stat = vec.first().map_or(*stat, |rec| rec.rate);
+    match amount.partial_cmp(&0.0) {
+        Some(Ordering::Equal) => {
+            if let Ok(idx) = idx_r {
+                vec.remove(idx);
+            };
+            if (*stat - rate).abs() < std::f64::EPSILON || *stat == 0.0 {
+                *stat = vec.first().map_or(*stat, |rec| rec.rate);
+            }    
+        },
+        Some(Ordering::Greater) => {
+            match idx_r {
+                Ok(idx) => vec[idx].amount = amount,
+                Err(idx) => vec.insert(idx, Record { rate, amount }),
+            };
+            if stat_cmp || *stat == 0.0 {
+                *stat = rate
+            }
         }
-    } else if amount > 0.0 {
-        match idx_r {
-            Ok(idx) => vec[idx].amount = amount,
-            Err(idx) => vec.insert(idx, Record { rate, amount }),
-        };
-        if stat_cmp || *stat == 0.0 {
-            *stat = rate
-        }
+        _ => ()
     };
 }
 
