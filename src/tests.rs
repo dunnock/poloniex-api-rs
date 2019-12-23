@@ -11,7 +11,7 @@ fn model_works() {
         pair: book::TradePairs::BtcBch,
         sell: rec_hash.clone(),
         buy: rec_hash,
-        deals: Timeseries::new(),
+        deals: Timeseries::default(),
         last_updated: crate::get_time()
     };
     _b.update_buy_orders("0.001".to_owned(), 10.0);

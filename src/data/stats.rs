@@ -2,13 +2,14 @@ use super::book::Deal;
 use super::book::{Book, BookAccounting};
 use super::tradestats::{TimeStats, TradeStats};
 use crate::error::PoloError;
+use crate::get_time;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::collections::{HashMap, VecDeque};
 use std::fmt;
 use time;
 use time::Timespec;
-use crate::get_time;
+use std::hash::BuildHasher;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Record {
@@ -233,8 +234,7 @@ pub fn f64cmp(f1: f64, f2: f64) -> Ordering {
     f1.partial_cmp(&f2).unwrap_or(Ordering::Equal)
 }
 
-
-pub fn hash_to_vec(hash: &HashMap<String, f64>) -> Vec<Record> {
+pub fn hash_to_vec<S: BuildHasher+Default>(hash: &HashMap<String, f64, S>) -> Vec<Record> {
     hash.iter()
         .filter_map(|(rate_s, amount)| {
             rate_s
