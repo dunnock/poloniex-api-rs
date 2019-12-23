@@ -12,14 +12,16 @@ pub trait WithTime {
     fn get_time(&self) -> Timespec;
 }
 
-impl<D: WithTime + Debug> Timeseries<D> {
-    pub fn new() -> Timeseries<D> {
+impl<D: WithTime + Debug> Default for Timeseries<D> {
+    fn default() -> Self {
         Timeseries {
             data: VecDeque::with_capacity(1000),
             timestamps: VecDeque::with_capacity(1000),
         }
     }
+}
 
+impl<D: WithTime + Debug> Timeseries<D> {
     pub fn add(&mut self, rec: D) {
         let timestamp = rec.get_time();
         self.data.push_front(rec);
@@ -47,8 +49,7 @@ impl<D: WithTime + Debug> Timeseries<D> {
     pub fn vec_after(&self, after: Timespec) -> Vec<&D> {
         let mut items = Vec::new();
         let mut dataiter = self.data.iter();
-        let mut timeiter = self.timestamps.iter();
-        while let Some(timestamp) = timeiter.next() {
+        for timestamp in self.timestamps.iter() {
             if *timestamp > after {
                 if let Some(item) = dataiter.next() {
                     items.push(item);

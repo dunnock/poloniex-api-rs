@@ -91,7 +91,7 @@ impl Book {
             pair,
             sell: HashMap::with_capacity(CAPACITY),
             buy: HashMap::with_capacity(CAPACITY),
-            deals: Timeseries::new(),
+            deals: Timeseries::default(),
         }
     }
 }
@@ -168,7 +168,7 @@ impl<'a> TryFrom<&'a JsonValue> for Book {
             pair: TradePairs::try_from(&v["currencyPair"])?,
             sell: v["orderBook"][0].expect("initial book orderBook[0]")?,
             buy: v["orderBook"][1].expect("initial book orderBook[1]")?,
-            deals: Timeseries::new(),
+            deals: Timeseries::default(),
         })
     }
 }

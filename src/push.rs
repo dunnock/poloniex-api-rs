@@ -14,7 +14,7 @@ pub async fn subscribe(
     let url = url::Url::parse(&connect_addr).map_err(|err| Error::Url(err.to_string().into()))?;
     let (mut ws_stream, _) = connect_async(url).await?;
     for pair in pairs.iter() {
-        let msg = message_subscribe(pair).into();
+        let msg = message_subscribe(pair);
         ws_stream.send(msg).await?;
     }
     Ok(ws_stream)

@@ -233,6 +233,7 @@ pub fn f64cmp(f1: f64, f2: f64) -> Ordering {
     f1.partial_cmp(&f2).unwrap_or(Ordering::Equal)
 }
 
+
 pub fn hash_to_vec(hash: &HashMap<String, f64>) -> Vec<Record> {
     hash.iter()
         .filter_map(|(rate_s, amount)| {
